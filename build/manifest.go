@@ -1,4 +1,4 @@
-package configuration
+package build
 
 import (
 	"io/ioutil"
@@ -24,11 +24,11 @@ type Step struct {
 	ImageName  string
 	Runtime    bool
 	Artefacts  []Artefact
-	Build      Build
+	Manifest   Manifest
 }
 
-// Build Holds the whole build process
-type Build struct {
+// Manifest Holds the whole build process
+type Manifest struct {
 	Workdir string
 	Steps   []Step
 }
@@ -48,7 +48,7 @@ type build struct {
 }
 
 // LoadBuildFromFile loads Build from a yaml file
-func LoadBuildFromFile(file string) (*Build, error) {
+func LoadBuildFromFile(file string) (*Manifest, error) {
 	t := build{}
 
 	data, err := ioutil.ReadFile(file)
@@ -64,15 +64,15 @@ func LoadBuildFromFile(file string) (*Build, error) {
 	return t.convertToBuild()
 }
 
-func (b *build) convertToBuild() (*Build, error) {
-	r := Build{}
+func (b *build) convertToBuild() (*Manifest, error) {
+	r := Manifest{}
 	r.Workdir = b.Workdir
 	r.Steps = []Step{}
 
 	for idx, s := range b.Steps {
 		convertedStep := Step{}
 
-		convertedStep.Build = r
+		convertedStep.Manifest = r
 		convertedStep.Dockerfile = s.Dockerfile
 		convertedStep.ImageName = s.ImageName
 		convertedStep.Name = s.Name
