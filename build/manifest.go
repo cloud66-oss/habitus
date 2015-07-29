@@ -22,7 +22,7 @@ type Step struct {
 	Name       string
 	Dockerfile string
 	ImageName  string
-	Runtime    bool
+	Keep       bool
 	Artefacts  []Artefact
 	Manifest   Manifest
 }
@@ -38,7 +38,7 @@ type step struct {
 	Name       string
 	Dockerfile string
 	ImageName  string
-	Runtime    bool
+	Keep       bool
 	Artefacts  []string
 }
 
@@ -77,7 +77,7 @@ func (b *build) convertToBuild() (*Manifest, error) {
 		convertedStep.ImageName = s.ImageName
 		convertedStep.Name = s.Name
 		convertedStep.Order = idx
-		convertedStep.Runtime = s.Runtime
+		convertedStep.Keep = s.Keep
 		convertedStep.Artefacts = []Artefact{}
 
 		for kdx, a := range s.Artefacts {

@@ -11,26 +11,25 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/dchest/uniuri"
 	"github.com/docker/docker/builder/parser"
 	"github.com/fsouza/go-dockerclient"
-	"github.com/nu7hatch/gouuid"
 )
 
 // Builder is a simple Dockerfile builder
 type Builder struct {
-	Build   *Manifest
-	Session string // unique session id for this build
+	Build    *Manifest
+	UniqueID string // unique id for this build sequence. This is used for automated builds
 
 	config *tls.Config
 	docker docker.Client
 }
 
 // NewBuilder creates a new builder in a new session
-func NewBuilder(manifest *Manifest) *Builder {
+func NewBuilder(manifest *Manifest, uniqueID string) *Builder {
 	b := Builder{}
 	b.Build = manifest
-	u, _ := uuid.NewV4()
-	b.Session = strings.Replace(u.String(), "-", "", -1)
+	b.UniqueID = uniqueID
 
 	certPath := os.Getenv("DOCKER_CERT_PATH")
 	endpoint := os.Getenv("DOCKER_HOST")
@@ -56,11 +55,23 @@ func (b *Builder) StartBuild() error {
 		}
 	}
 
+	// TODO: if this is a runtime step, push it up to the repo
+	// TODO: Clear after yourself: images, containers, etc (optional for premium users)
+	for _, s := range b.Build.Steps {
+		if s.Keep {
+			continue
+		}
+
+	}
 	return nil
 }
 
 func (b *Builder) uniqueStepName(step *Step) string {
-	return strings.ToLower(fmt.Sprintf("%s.%s", b.Session, step.Name))
+	if b.UniqueID == "" {
+		return step.Name
+	}
+
+	return strings.ToLower(fmt.Sprintf("%s.%s", b.UniqueID, step.Name))
 }
 
 // BuildStep builds a single step
@@ -117,10 +128,19 @@ func (b *Builder) BuildStep(step *Step) error {
 				return err
 			}
 		}
-	}
 
-	// TODO: if this is a runtime step, push it up to the repo
-	// TODO: Clear after yourself: images, containers, etc (optional for premium users)
+		// remove the created container
+		removeOpts := docker.RemoveContainerOptions{
+			ID:            container.ID,
+			RemoveVolumes: true,
+			Force:         true,
+		}
+
+		err = b.docker.RemoveContainer(removeOpts)
+		if err != nil {
+			return err
+		}
+	}
 
 	// clean up the parsed docker file. It will remain there if there was a problem
 	err = os.Remove(b.uniqueDockerfile(step))
@@ -204,7 +224,7 @@ func (b *Builder) createContainer(step *Step) (*docker.Container, error) {
 		Cmd:          []string{""},
 	}
 	opts := docker.CreateContainerOptions{
-		Name:   b.uniqueStepName(step),
+		Name:   b.uniqueStepName(step) + "." + uniuri.New(),
 		Config: &config,
 	}
 	container, err := b.docker.CreateContainer(opts)
