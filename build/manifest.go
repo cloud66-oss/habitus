@@ -21,7 +21,6 @@ type Step struct {
 	Order      int
 	Name       string
 	Dockerfile string
-	ImageName  string
 	Keep       bool
 	Artefacts  []Artefact
 	Manifest   Manifest
@@ -37,7 +36,6 @@ type Manifest struct {
 type step struct {
 	Name       string
 	Dockerfile string
-	ImageName  string
 	Keep       bool
 	Artefacts  []string
 }
@@ -74,7 +72,6 @@ func (b *build) convertToBuild() (*Manifest, error) {
 
 		convertedStep.Manifest = r
 		convertedStep.Dockerfile = s.Dockerfile
-		convertedStep.ImageName = s.ImageName
 		convertedStep.Name = s.Name
 		convertedStep.Order = idx
 		convertedStep.Keep = s.Keep

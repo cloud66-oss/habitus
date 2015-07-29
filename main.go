@@ -13,7 +13,7 @@ func main() {
 	}
 
 	b := build.NewBuilder(c, "cxbuilder") // TODO: This is passed in as a parameter
-	err = b.StartBuild()
+	err = b.StartBuild("")
 	if err != nil {
 		fmt.Printf("Error during build %s", err.Error())
 	}

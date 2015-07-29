@@ -3,12 +3,10 @@ steps:
   - step_one:
     name: gobase
     dockerfile: Dockerfile.base
-    imagename: gobase
     keep: false
     artefacts:
       - /go/src/app/go-service
   - step_two:
-    name: StepTwo
+    name: steptwo
     dockerfile: Dockerfile.main
-    imagename: another
     keep: true

@@ -19,7 +19,7 @@ import (
 // Builder is a simple Dockerfile builder
 type Builder struct {
 	Build    *Manifest
-	UniqueID string // unique id for this build sequence. This is used for automated builds
+	UniqueID string // unique id for this build sequence. This is used for multi-tenanted environments
 
 	config *tls.Config
 	docker docker.Client
@@ -47,21 +47,36 @@ func NewBuilder(manifest *Manifest, uniqueID string) *Builder {
 }
 
 // StartBuild runs the build process end to end
-func (b *Builder) StartBuild() error {
-	for _, s := range b.Build.Steps {
+func (b *Builder) StartBuild(startStep string) error {
+	var steps []Step
+	if startStep == "" {
+		steps = b.Build.Steps
+	} else {
+		for idx, s := range b.Build.Steps {
+			if s.Name == startStep {
+				steps = b.Build.Steps[idx:]
+				break
+			}
+		}
+	}
+
+	for _, s := range steps {
 		err := b.BuildStep(&s)
 		if err != nil {
 			return err
 		}
 	}
 
-	// TODO: if this is a runtime step, push it up to the repo
-	// TODO: Clear after yourself: images, containers, etc (optional for premium users)
+	// Clear after yourself: images, containers, etc (optional for premium users)
 	for _, s := range b.Build.Steps {
 		if s.Keep {
 			continue
 		}
 
+		err := b.docker.RemoveImage(b.uniqueStepName(&s))
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -83,9 +98,6 @@ func (b *Builder) BuildStep(step *Step) error {
 	}
 
 	// call Docker to build the Dockerfile (from the parsed file)
-	// NOTE: This is not going to work when the build starts midflow as we don't know
-	// NOTE: last step's session ID.
-	// TODO: Fix this!
 	// TODO: Make options configurable
 	opts := docker.BuildImageOptions{
 		Name:                b.uniqueStepName(step),
