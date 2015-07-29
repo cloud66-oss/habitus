@@ -1,14 +1,12 @@
 package build
 
 import (
-	"bytes"
 	"crypto/tls"
 	"fmt"
-	"io"
 	"log"
 	"os"
-	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/fsouza/go-dockerclient"
@@ -48,13 +46,8 @@ func NewBuilder(manifest *Manifest) *Builder {
 
 // StartBuild runs the build process end to end
 func (b *Builder) StartBuild() error {
-	err := b.BuildContext()
-	if err != nil {
-		return err
-	}
-
 	for _, s := range b.Build.Steps {
-		err = b.BuildStep(&s)
+		err := b.BuildStep(&s)
 		if err != nil {
 			return err
 		}
@@ -63,27 +56,22 @@ func (b *Builder) StartBuild() error {
 	return nil
 }
 
+func (b *Builder) uniqueStepName(step *Step) string {
+	return strings.ToLower(fmt.Sprintf("%s.%s", b.Session, step.Name))
+}
+
 // BuildStep builds a single step
 func (b *Builder) BuildStep(step *Step) error {
 	// call Docker to build the Dockerfile
-	contextFile, err := os.OpenFile(b.contextFileName(), os.O_RDONLY, 0)
-	if err != nil {
-		return err
-	}
-	defer contextFile.Close()
-	tarReader := io.Reader(contextFile)
-	var buf bytes.Buffer
-
 	opts := docker.BuildImageOptions{
-		Name:                strings.ToLower(fmt.Sprintf("%s.%s", b.Session, step.Name)),
+		Name:                b.uniqueStepName(step),
 		Dockerfile:          step.Dockerfile,
 		NoCache:             true,
-		SuppressOutput:      true,
+		SuppressOutput:      false,
 		RmTmpContainer:      true,
 		ForceRmTmpContainer: true,
-		InputStream:         tarReader,
-		OutputStream:        &buf,
-		//		ContextDir:          b.Build.Workdir, the new docker client can work with dirs so no need for taring?
+		OutputStream:        os.Stdout, // TODO: use a multi writer to get a stream out for the API
+		ContextDir:          b.Build.Workdir,
 		/*
 			AuthConfigs: docker.AuthConfigurations{
 				Configs: map[string]docker.AuthConfiguration{
@@ -97,34 +85,70 @@ func (b *Builder) BuildStep(step *Step) error {
 			},*/
 	}
 
-	err = b.docker.BuildImage(opts)
+	err := b.docker.BuildImage(opts)
 	if err != nil {
 		return err
 	}
 
-	/*
-		scanner := bufio.NewScanner(buf)
-		for scanner.Scan() {
-			fmt.Print(scanner.Text())
-		}
-		if err := scanner.Err(); err != nil {
+	// if there are any artefacts to be picked up, create a container and copy them over
+	if len(step.Artefacts) > 0 {
+		// create a container
+		container, err := b.createContainer(step)
+		if err != nil {
 			return err
 		}
-	*/
-	fmt.Print(buf.String())
-	return nil
-	// TODO: if there are any artefacts to be picked up, create a container and copy them over
+
+		for _, art := range step.Artefacts {
+			err = b.copyToHost(&art, container.ID)
+			if err != nil {
+				return err
+			}
+		}
+	}
 	// TODO: if this is a runtime step, push it up to the repo
+
+	return nil
 }
 
-// BuildContext builds a tar file for the context
-func (b *Builder) BuildContext() error {
-	// REFACTOR: Ideally we should use native tarring
-	cmd := exec.Command("tar", "-cf", b.contextFileName(), "-C", b.Build.Workdir, ".")
-	return cmd.Run()
+func (b *Builder) copyToHost(a *Artefact, container string) error {
+	// create the dest folder if not there
+	err := os.MkdirAll(a.Dest, 0777)
+	if err != nil {
+		return err
+	}
+
+	// TODO: make /tmp configurable
+	dest, err := os.Create(path.Join("/tmp", a.Dest, filepath.Base(a.Source)))
+	if err != nil {
+		return err
+	}
+	defer dest.Close()
+
+	opt := docker.CopyFromContainerOptions{
+		OutputStream: dest,
+		Container:    container,
+		Resource:     a.Source,
+	}
+
+	return b.docker.CopyFromContainer(opt)
 }
 
-func (b *Builder) contextFileName() string {
-	// TODO: for now we are putting them into /tmp
-	return fmt.Sprintf("/tmp/%s.tar", b.Session)
+func (b *Builder) createContainer(step *Step) (*docker.Container, error) {
+	config := docker.Config{
+		AttachStdout: true,
+		AttachStdin:  false,
+		AttachStderr: false,
+		Image:        b.uniqueStepName(step),
+		Cmd:          []string{""},
+	}
+	opts := docker.CreateContainerOptions{
+		Name:   b.uniqueStepName(step),
+		Config: &config,
+	}
+	container, err := b.docker.CreateContainer(opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return container, nil
 }

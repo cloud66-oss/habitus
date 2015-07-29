@@ -6,8 +6,8 @@ steps:
     imagename: gobase
     runtime: false
     artefacts:
-      - /some/stuff:/to/some/where
-      - /some/where/else:/to/another/place
+      - /go/src/app/main.go
+      - /go/src/app/Dockerfile.main:/somewhere
   - step_two:
     name: StepTwo
     dockerfile: Dockerfile.main

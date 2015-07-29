@@ -12,7 +12,7 @@ type Artefact struct {
 	Order  int
 	Step   Step
 	Source string
-	Dest   string
+	Dest   string // this is only the folder. Filename comes from the source
 }
 
 // Step Holds a single step in the build process
@@ -86,9 +86,13 @@ func (b *build) convertToBuild() (*Manifest, error) {
 			convertedArt.Order = kdx
 			convertedArt.Step = convertedStep
 			parts := strings.Split(a, ":")
-			// TODO: Validate (both parts should exist)
 			convertedArt.Source = parts[0]
-			convertedArt.Dest = parts[1]
+			if len(parts) == 1 {
+				// only one use the base
+				convertedArt.Dest = "."
+			} else {
+				convertedArt.Dest = parts[1]
+			}
 
 			convertedStep.Artefacts = append(convertedStep.Artefacts, convertedArt)
 		}
