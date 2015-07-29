@@ -1,6 +1,7 @@
 workdir: /Users/khash/work/go/src/github.com/cloud66-samples/go-service
 steps:
   - step_one:
+    name: StepOne
     dockerfile: Dockerfile.base
     imagename: gobase
     runtime: false
@@ -8,6 +9,7 @@ steps:
       - /some/stuff:/to/some/where
       - /some/where/else:/to/another/place
   - step_two:
+    name: StepTwo
     dockerfile: Dockerfile.main
     imagename: another
     runtime: true
