@@ -72,6 +72,10 @@ func (b *Builder) BuildStep(step *Step) error {
 	}
 
 	// call Docker to build the Dockerfile (from the parsed file)
+	// NOTE: This is not going to work when the build starts midflow as we don't know
+	// NOTE: last step's session ID.
+	// TODO: Fix this!
+	// TODO: Make options configurable
 	opts := docker.BuildImageOptions{
 		Name:                b.uniqueStepName(step),
 		Dockerfile:          filepath.Base(b.uniqueDockerfile(step)),
@@ -176,8 +180,7 @@ func (b *Builder) copyToHost(a *Artefact, container string) error {
 		return err
 	}
 
-	// TODO: make /tmp configurable
-	dest, err := os.Create(path.Join("/tmp", a.Dest, filepath.Base(a.Source)))
+	dest, err := os.Create(path.Join(hostStorage(), a.Dest, filepath.Base(a.Source)))
 	if err != nil {
 		return err
 	}
@@ -239,4 +242,13 @@ func dumpDockerfile(node *parser.Node) string {
 
 func (b *Builder) uniqueDockerfile(step *Step) string {
 	return filepath.Join(b.Build.Workdir, b.uniqueStepName(step))
+}
+
+func hostStorage() string {
+	s := os.Getenv("CXBUILDER")
+	if s == "" {
+		return "/tmp"
+	}
+
+	return s
 }
