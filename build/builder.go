@@ -212,7 +212,7 @@ func (b *Builder) copyToHost(a *Artefact, container string) error {
 		return err
 	}
 
-	dest, err := os.Create(path.Join(hostStorage(), a.Dest, filepath.Base(a.Source)))
+	dest, err := os.Create(path.Join(b.Build.Workdir, a.Dest, filepath.Base(a.Source)))
 	if err != nil {
 		return err
 	}
@@ -274,13 +274,4 @@ func dumpDockerfile(node *parser.Node) string {
 
 func (b *Builder) uniqueDockerfile(step *Step) string {
 	return filepath.Join(b.Build.Workdir, b.uniqueStepName(step))
-}
-
-func hostStorage() string {
-	s := os.Getenv("CXBUILDER")
-	if s == "" {
-		return "/tmp"
-	}
-
-	return s
 }

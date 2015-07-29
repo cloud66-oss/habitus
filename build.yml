@@ -5,7 +5,7 @@ steps:
     dockerfile: Dockerfile.base
     keep: false
     artefacts:
-      - /go/src/app/go-service
+      - /go/src/go-service/go-service
   - step_two:
     name: steptwo
     dockerfile: Dockerfile.main
