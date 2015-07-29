@@ -2,13 +2,16 @@ package build
 
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
 
+	"github.com/docker/docker/builder/parser"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/nu7hatch/gouuid"
 )
@@ -62,10 +65,16 @@ func (b *Builder) uniqueStepName(step *Step) string {
 
 // BuildStep builds a single step
 func (b *Builder) BuildStep(step *Step) error {
-	// call Docker to build the Dockerfile
+	// fix the Dockerfile
+	err := b.replaceFromField(step)
+	if err != nil {
+		return err
+	}
+
+	// call Docker to build the Dockerfile (from the parsed file)
 	opts := docker.BuildImageOptions{
 		Name:                b.uniqueStepName(step),
-		Dockerfile:          step.Dockerfile,
+		Dockerfile:          filepath.Base(b.uniqueDockerfile(step)),
 		NoCache:             true,
 		SuppressOutput:      false,
 		RmTmpContainer:      true,
@@ -85,7 +94,7 @@ func (b *Builder) BuildStep(step *Step) error {
 			},*/
 	}
 
-	err := b.docker.BuildImage(opts)
+	err = b.docker.BuildImage(opts)
 	if err != nil {
 		return err
 	}
@@ -105,7 +114,57 @@ func (b *Builder) BuildStep(step *Step) error {
 			}
 		}
 	}
+
 	// TODO: if this is a runtime step, push it up to the repo
+	// TODO: Clear after yourself: images, containers, etc (optional for premium users)
+
+	// clean up the parsed docker file. It will remain there if there was a problem
+	err = os.Remove(b.uniqueDockerfile(step))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// this replaces the FROM field in the Dockerfile to one with the previous step's unique name
+// it stores the parsed result Dockefile in uniqueSessionName file
+func (b *Builder) replaceFromField(step *Step) error {
+	rwc, err := os.Open(path.Join(b.Build.Workdir, step.Dockerfile))
+	if err != nil {
+		return err
+	}
+	defer rwc.Close()
+
+	node, err := parser.Parse(rwc)
+	if err != nil {
+		return err
+	}
+
+	for _, child := range node.Children {
+		if child.Value == "from" {
+			// found it. is it from anyone we know?
+			if child.Next == nil {
+				return errors.New("invalid Dockerfile. No valid FROM found")
+			}
+
+			imageName := child.Next.Value
+			found, err := step.Manifest.FindStepByName(imageName)
+			if err != nil {
+				return err
+			}
+
+			if found != nil {
+				child.Next.Value = b.uniqueStepName(found)
+			}
+		}
+	}
+
+	// did it have any effect?
+	err = ioutil.WriteFile(b.uniqueDockerfile(step), []byte(dumpDockerfile(node)), 0644)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -151,4 +210,33 @@ func (b *Builder) createContainer(step *Step) (*docker.Container, error) {
 	}
 
 	return container, nil
+}
+
+func dumpDockerfile(node *parser.Node) string {
+	str := ""
+	str += node.Value
+
+	if len(node.Flags) > 0 {
+		str += fmt.Sprintf(" %q", node.Flags)
+	}
+
+	for _, n := range node.Children {
+		str += dumpDockerfile(n) + "\n"
+	}
+
+	if node.Next != nil {
+		for n := node.Next; n != nil; n = n.Next {
+			if len(n.Children) > 0 {
+				str += " " + dumpDockerfile(n)
+			} else {
+				str += " " + n.Value
+			}
+		}
+	}
+
+	return strings.TrimSpace(str)
+}
+
+func (b *Builder) uniqueDockerfile(step *Step) string {
+	return filepath.Join(b.Build.Workdir, b.uniqueStepName(step))
 }

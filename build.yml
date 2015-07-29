@@ -1,13 +1,13 @@
 workdir: /Users/khash/work/go/src/github.com/cloud66-samples/go-service
 steps:
   - step_one:
-    name: StepOne
+    name: gobase
     dockerfile: Dockerfile.base
     imagename: gobase
     runtime: false
     artefacts:
       - /go/src/app/main.go
-      - /go/src/app/Dockerfile.main:/somewhere
+      - /go/src/app/Dockerfile.main
   - step_two:
     name: StepTwo
     dockerfile: Dockerfile.main

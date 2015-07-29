@@ -104,3 +104,14 @@ func (b *build) convertToBuild() (*Manifest, error) {
 
 	return &r, nil
 }
+
+// FindStepByName finds a step by name. Returns nil if not found
+func (m *Manifest) FindStepByName(name string) (*Step, error) {
+	for _, step := range m.Steps {
+		if step.Name == name {
+			return &step, nil
+		}
+	}
+
+	return nil, nil
+}
