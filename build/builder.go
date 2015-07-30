@@ -7,10 +7,12 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/user"
 	"path"
 	"path/filepath"
 	"strings"
 
+	"github.com/cloud66/cxbuild/configuration"
 	"github.com/dchest/uniuri"
 	"github.com/docker/docker/builder/parser"
 	"github.com/fsouza/go-dockerclient"
@@ -20,16 +22,19 @@ import (
 type Builder struct {
 	Build    *Manifest
 	UniqueID string // unique id for this build sequence. This is used for multi-tenanted environments
+	Conf     *configuration.Config
 
 	config *tls.Config
 	docker docker.Client
+	auth   *docker.AuthConfigurations
 }
 
 // NewBuilder creates a new builder in a new session
-func NewBuilder(manifest *Manifest, uniqueID string) *Builder {
+func NewBuilder(manifest *Manifest, conf *configuration.Config) *Builder {
 	b := Builder{}
 	b.Build = manifest
-	b.UniqueID = uniqueID
+	b.UniqueID = conf.UniqueID
+	b.Conf = conf
 
 	certPath := os.Getenv("DOCKER_CERT_PATH")
 	endpoint := os.Getenv("DOCKER_HOST")
@@ -38,6 +43,25 @@ func NewBuilder(manifest *Manifest, uniqueID string) *Builder {
 	key := path.Join(certPath, "key.pem")
 	client, err := docker.NewTLSClient(endpoint, cert, key, ca)
 	b.docker = *client
+
+	usr, err := user.Current()
+	if err != nil {
+		log.Fatalf("Failed to find the current user: %s", err.Error())
+	}
+
+	if _, err := os.Stat(filepath.Join(usr.HomeDir, ".dockercfg")); err == nil {
+		authStream, err := os.Open(filepath.Join(usr.HomeDir, ".dockercfg"))
+		if err != nil {
+			log.Fatal("Unable to read .dockerconf file")
+		}
+		defer authStream.Close()
+
+		auth, err := docker.NewAuthConfigurations(authStream)
+		if err != nil {
+			log.Fatalf("Invalid .dockerconf: %s", err.Error())
+		}
+		b.auth = auth
+	}
 
 	if err != nil {
 		log.Fatalf("Failed to connect to Docker daemon %s", err.Error())
@@ -108,17 +132,10 @@ func (b *Builder) BuildStep(step *Step) error {
 		ForceRmTmpContainer: true,
 		OutputStream:        os.Stdout, // TODO: use a multi writer to get a stream out for the API
 		ContextDir:          b.Build.Workdir,
-		/*
-			AuthConfigs: docker.AuthConfigurations{
-				Configs: map[string]docker.AuthConfiguration{
-					"quay.io": {
-						Username:      "foo",
-						Password:      "bar",
-						Email:         "baz",
-						ServerAddress: "quay.io",
-					},
-				},
-			},*/
+	}
+
+	if b.auth != nil {
+		opts.AuthConfigs = *b.auth
 	}
 
 	err = b.docker.BuildImage(opts)

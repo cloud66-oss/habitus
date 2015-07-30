@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/cloud66/cxbuild/configuration"
+
 	"gopkg.in/yaml.v2"
 )
 
@@ -47,10 +49,12 @@ type build struct {
 }
 
 // LoadBuildFromFile loads Build from a yaml file
-func LoadBuildFromFile(file string) (*Manifest, error) {
+func LoadBuildFromFile(config *configuration.Config) (*Manifest, error) {
+	config.Logger.Notice("Using '%s' as build file", config.Buildfile)
+
 	t := build{}
 
-	data, err := ioutil.ReadFile(file)
+	data, err := ioutil.ReadFile(config.Buildfile)
 	if err != nil {
 		return nil, err
 	}
