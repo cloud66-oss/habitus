@@ -1,6 +1,7 @@
 package build
 
 import (
+	"fmt"
 	"io/ioutil"
 	"strings"
 
@@ -94,7 +95,12 @@ func (b *build) convertToBuild() (*Manifest, error) {
 			convertedStep.Artefacts = append(convertedStep.Artefacts, convertedArt)
 		}
 
-		// TODO: validate (unique name,...)
+		// is it unique?
+		for _, s := range r.Steps {
+			if s.Name == convertedStep.Name {
+				return nil, fmt.Errorf("Step name '%s' is not unique", convertedStep.Name)
+			}
+		}
 
 		r.Steps = append(r.Steps, convertedStep)
 	}
