@@ -24,6 +24,7 @@ func main() {
 	flag.StringVar(&config.Buildfile, "f", "./build.yml", "Build file path")
 	flag.BoolVar(&config.NoCache, "no-cache", false, "Use cache in build")
 	flag.BoolVar(&config.SuppressOutput, "suppress", false, "Suppress build output")
+	flag.BoolVar(&config.RmTmpContainers, "rm", true, "Remove intermediate containers")
 	flag.BoolVar(&config.ForceRmTmpContainer, "force-rm", false, "Force remove intermediate containers")
 	flag.StringVar(&config.StartStep, "s", "", "Starting step for the build")
 	flag.StringVar(&config.UniqueID, "uid", "", "Unique ID for the build. Used only for multi-tenanted build environments")

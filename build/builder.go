@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/user"
 	"path"
@@ -46,25 +45,25 @@ func NewBuilder(manifest *Manifest, conf *configuration.Config) *Builder {
 
 	usr, err := user.Current()
 	if err != nil {
-		log.Fatalf("Failed to find the current user: %s", err.Error())
+		b.Conf.Logger.Fatalf("Failed to find the current user: %s", err.Error())
 	}
 
 	if _, err := os.Stat(filepath.Join(usr.HomeDir, ".dockercfg")); err == nil {
 		authStream, err := os.Open(filepath.Join(usr.HomeDir, ".dockercfg"))
 		if err != nil {
-			log.Fatal("Unable to read .dockerconf file")
+			b.Conf.Logger.Fatal("Unable to read .dockerconf file")
 		}
 		defer authStream.Close()
 
 		auth, err := docker.NewAuthConfigurations(authStream)
 		if err != nil {
-			log.Fatalf("Invalid .dockerconf: %s", err.Error())
+			b.Conf.Logger.Fatalf("Invalid .dockerconf: %s", err.Error())
 		}
 		b.auth = auth
 	}
 
 	if err != nil {
-		log.Fatalf("Failed to connect to Docker daemon %s", err.Error())
+		b.Conf.Logger.Fatalf("Failed to connect to Docker daemon %s", err.Error())
 	}
 
 	return &b
@@ -74,8 +73,10 @@ func NewBuilder(manifest *Manifest, conf *configuration.Config) *Builder {
 func (b *Builder) StartBuild(startStep string) error {
 	var steps []Step
 	if startStep == "" {
+		b.Conf.Logger.Notice("Starting the build chain")
 		steps = b.Build.Steps
 	} else {
+		b.Conf.Logger.Notice("Starting the build chain from '%s'", startStep)
 		for idx, s := range b.Build.Steps {
 			if s.Name == startStep {
 				steps = b.Build.Steps[idx:]
@@ -115,6 +116,7 @@ func (b *Builder) uniqueStepName(step *Step) string {
 
 // BuildStep builds a single step
 func (b *Builder) BuildStep(step *Step) error {
+	b.Conf.Logger.Notice("Building %s", step.Name)
 	// fix the Dockerfile
 	err := b.replaceFromField(step)
 	if err != nil {
@@ -122,14 +124,13 @@ func (b *Builder) BuildStep(step *Step) error {
 	}
 
 	// call Docker to build the Dockerfile (from the parsed file)
-	// TODO: Make options configurable
 	opts := docker.BuildImageOptions{
 		Name:                b.uniqueStepName(step),
 		Dockerfile:          filepath.Base(b.uniqueDockerfile(step)),
-		NoCache:             true,
-		SuppressOutput:      false,
-		RmTmpContainer:      true,
-		ForceRmTmpContainer: true,
+		NoCache:             b.Conf.NoCache,
+		SuppressOutput:      b.Conf.SuppressOutput,
+		RmTmpContainer:      b.Conf.RmTmpContainers,
+		ForceRmTmpContainer: b.Conf.ForceRmTmpContainer,
 		OutputStream:        os.Stdout, // TODO: use a multi writer to get a stream out for the API
 		ContextDir:          b.Build.Workdir,
 	}
@@ -145,6 +146,7 @@ func (b *Builder) BuildStep(step *Step) error {
 
 	// if there are any artefacts to be picked up, create a container and copy them over
 	if len(step.Artefacts) > 0 {
+		b.Conf.Logger.Notice("Copying artefacts")
 		// create a container
 		container, err := b.createContainer(step)
 		if err != nil {
@@ -165,6 +167,7 @@ func (b *Builder) BuildStep(step *Step) error {
 			Force:         true,
 		}
 
+		b.Conf.Logger.Debug("Removing built container '%s'", container.ID)
 		err = b.docker.RemoveContainer(removeOpts)
 		if err != nil {
 			return err
@@ -183,6 +186,8 @@ func (b *Builder) BuildStep(step *Step) error {
 // this replaces the FROM field in the Dockerfile to one with the previous step's unique name
 // it stores the parsed result Dockefile in uniqueSessionName file
 func (b *Builder) replaceFromField(step *Step) error {
+	b.Conf.Logger.Notice("Parsing and converting '%s'", step.Dockerfile)
+
 	rwc, err := os.Open(path.Join(b.Build.Workdir, step.Dockerfile))
 	if err != nil {
 		return err
@@ -229,7 +234,8 @@ func (b *Builder) copyToHost(a *Artefact, container string) error {
 		return err
 	}
 
-	dest, err := os.Create(path.Join(b.Build.Workdir, a.Dest, filepath.Base(a.Source)))
+	destFile := path.Join(b.Build.Workdir, a.Dest, filepath.Base(a.Source))
+	dest, err := os.Create(destFile)
 	if err != nil {
 		return err
 	}
@@ -240,6 +246,8 @@ func (b *Builder) copyToHost(a *Artefact, container string) error {
 		Container:    container,
 		Resource:     a.Source,
 	}
+
+	b.Conf.Logger.Info("Copying from %s to %s", a.Source, destFile)
 
 	return b.docker.CopyFromContainer(opt)
 }

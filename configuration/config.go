@@ -8,7 +8,7 @@ type Config struct {
 	StartStep           string
 	NoCache             bool
 	SuppressOutput      bool
-	RmTmpContainer      bool
+	RmTmpContainers     bool
 	ForceRmTmpContainer bool
 	UniqueID            string
 	Logger              logging.Logger
