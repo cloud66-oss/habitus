@@ -20,21 +20,21 @@ var (
 )
 
 type Squasher struct {
-	conf *configuration.Config
+	Conf *configuration.Config
 }
 
 func (s *Squasher) shutdown(tempdir string) {
 	defer wg.Done()
 	<-signals
-	s.conf.Logger.Debug("Removing tempdir %s\n", tempdir)
+	s.Conf.Logger.Debug("Removing tempdir %s", tempdir)
 	err := os.RemoveAll(tempdir)
 	if err != nil {
-		s.conf.Logger.Fatal(err.Error())
+		s.Conf.Logger.Fatal(err.Error())
 	}
 }
 
 func (s *Squasher) Squash(input string, output string, tag string) error {
-	var from string
+	from := ""
 	keepTemp := false
 
 	tempdir, err := ioutil.TempDir("", "docker-squash")
@@ -45,7 +45,7 @@ func (s *Squasher) Squash(input string, output string, tag string) error {
 	if tag != "" && strings.Contains(tag, ":") {
 		parts := strings.Split(tag, ":")
 		if parts[0] == "" || parts[1] == "" {
-			return fmt.Errorf("Bad tag format: %s\n", tag)
+			return fmt.Errorf("Bad tag format: %s", tag)
 		}
 	}
 
@@ -57,7 +57,7 @@ func (s *Squasher) Squash(input string, output string, tag string) error {
 		go s.shutdown(tempdir)
 	}
 
-	export, err := LoadExport(s.conf, input, tempdir)
+	export, err := LoadExport(s.Conf, input, tempdir)
 	if err != nil {
 		return err
 	}
@@ -99,7 +99,7 @@ func (s *Squasher) Squash(input string, output string, tag string) error {
 	}
 
 	if start == nil {
-		return fmt.Errorf("no layer matching %s\n", from)
+		return fmt.Errorf("no layer matching %s", from)
 	}
 
 	// extract each "layer.tar" to "layer" dir
@@ -114,7 +114,7 @@ func (s *Squasher) Squash(input string, output string, tag string) error {
 		return err
 	}
 
-	s.conf.Logger.Debug("Inserted new layer %s after %s\n", newEntry.LayerConfig.Id[0:12],
+	s.Conf.Logger.Debug("Inserted new layer %s after %s", newEntry.LayerConfig.Id[0:12],
 		newEntry.LayerConfig.Parent[0:12])
 
 	e := export.Root()
@@ -128,9 +128,9 @@ func (s *Squasher) Squash(input string, output string, tag string) error {
 		}
 
 		if e.LayerConfig.Id == newEntry.LayerConfig.Id {
-			s.conf.Logger.Debug("  -> %s %s\n", e.LayerConfig.Id[0:12], cmd)
+			s.Conf.Logger.Debug("  -> %s %s", e.LayerConfig.Id[0:12], cmd)
 		} else {
-			s.conf.Logger.Debug("  -  %s %s\n", e.LayerConfig.Id[0:12], cmd)
+			s.Conf.Logger.Debug("  -  %s %s", e.LayerConfig.Id[0:12], cmd)
 		}
 		e = export.ChildOf(e.LayerConfig.Id)
 	}
@@ -141,14 +141,14 @@ func (s *Squasher) Squash(input string, output string, tag string) error {
 		return err
 	}
 
-	s.conf.Logger.Debug("Tarring up squashed layer %s\n", newEntry.LayerConfig.Id[:12])
+	s.Conf.Logger.Debug("Tarring up squashed layer %s", newEntry.LayerConfig.Id[:12])
 	// create a layer.tar from our squashed layer
 	err = newEntry.TarLayer()
 	if err != nil {
 		return err
 	}
 
-	s.conf.Logger.Debug("Removing extracted layers\n")
+	s.Conf.Logger.Debug("Removing extracted layers")
 	// remove our expanded "layer" dirs
 	err = export.RemoveExtractedLayers()
 	if err != nil {
@@ -169,7 +169,7 @@ func (s *Squasher) Squash(input string, output string, tag string) error {
 		tagInfo[tagPart] = layer.LayerConfig.Id
 		export.Repositories[repoPart] = &tagInfo
 
-		s.conf.Logger.Debug("Tagging %s as %s:%s\n", layer.LayerConfig.Id[0:12], repoPart, tagPart)
+		s.Conf.Logger.Debug("Tagging %s as %s:%s", layer.LayerConfig.Id[0:12], repoPart, tagPart)
 		err := export.WriteRepositoriesJson()
 		if err != nil {
 			return err
@@ -183,9 +183,9 @@ func (s *Squasher) Squash(input string, output string, tag string) error {
 		if err != nil {
 			return err
 		}
-		s.conf.Logger.Debug("Tarring new image to %s\n", output)
+		s.Conf.Logger.Debug("Tarring new image to %s", output)
 	} else {
-		s.conf.Logger.Debug("Tarring new image to STDOUT\n")
+		s.Conf.Logger.Debug("Tarring new image to STDOUT")
 	}
 	// bundle up the new image
 	err = export.TarLayers(ow)
@@ -193,7 +193,7 @@ func (s *Squasher) Squash(input string, output string, tag string) error {
 		return err
 	}
 
-	s.conf.Logger.Debug("Done. New image created.")
+	s.Conf.Logger.Debug("Done. New image created.")
 	// print our new history
 	export.PrintHistory()
 
