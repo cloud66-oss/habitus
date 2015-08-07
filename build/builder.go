@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"os/user"
 	"path"
 	"path/filepath"
@@ -196,11 +197,57 @@ func (b *Builder) BuildStep(step *Step) error {
 				<-success
 			}
 
+			tmpFile, err := ioutil.TempFile("", "cxbuild-export-")
+			if err != nil {
+				return err
+			}
+			defer tmpFile.Close()
+			tarWriter, err := os.Create(tmpFile.Name())
+			if err != nil {
+				return err
+			}
+			defer tarWriter.Close()
+			// save the container
+			expOpts := docker.ExportContainerOptions{
+				ID:           container.ID,
+				OutputStream: tarWriter,
+			}
+
 			b.Conf.Logger.Debug("Stopping the container")
 			err = b.docker.StopContainer(container.ID, 0)
 			if err != nil {
 				return err
 			}
+
+			b.Conf.Logger.Notice("Exporting cleaned up container to %s", tmpFile.Name())
+			err = b.docker.ExportContainer(expOpts)
+			if err != nil {
+				return err
+			}
+
+			// Squash
+			outTmpFile, err := ioutil.TempFile("", "cxbuild-export-")
+			if err != nil {
+				return err
+			}
+			defer outTmpFile.Close()
+			b.Conf.Logger.Notice("Squashing the image into %s", outTmpFile.Name())
+			cmd := exec.Command("sudo", "docker-squash", "-i", tmpFile.Name(), "-o", outTmpFile.Name())
+			err = cmd.Run()
+			if err != nil {
+				return err
+			}
+
+			b.Conf.Logger.Debug("Removing exported temp files")
+			err = os.Remove(tmpFile.Name())
+			if err != nil {
+				return err
+			}
+			err = os.Remove(outTmpFile.Name())
+			if err != nil {
+				return err
+			}
+			// TODO: Load
 		}
 
 		if len(step.Artefacts) > 0 {
