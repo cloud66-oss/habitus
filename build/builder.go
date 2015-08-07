@@ -145,18 +145,72 @@ func (b *Builder) BuildStep(step *Step) error {
 	}
 
 	// if there are any artefacts to be picked up, create a container and copy them over
-	if len(step.Artefacts) > 0 {
-		b.Conf.Logger.Notice("Copying artefacts")
+	// we also need a container if there are cleanup commands
+	if len(step.Artefacts) > 0 || len(step.Cleanup.Commands) > 0 {
+		b.Conf.Logger.Notice("Building container based on the image")
+
 		// create a container
 		container, err := b.createContainer(step)
 		if err != nil {
 			return err
 		}
 
-		for _, art := range step.Artefacts {
-			err = b.copyToHost(&art, container.ID)
+		if len(step.Cleanup.Commands) > 0 {
+			// start the container
+			b.Conf.Logger.Notice("Starting container to run cleanup commands")
+			startOpts := &docker.HostConfig{}
+			err = b.docker.StartContainer(container.ID, startOpts)
 			if err != nil {
 				return err
+			}
+
+			for _, cmd := range step.Cleanup.Commands {
+				b.Conf.Logger.Debug("Running cleanup command %s", cmd)
+				// create an exec for the commands
+				execOpts := docker.CreateExecOptions{
+					Container:    container.ID,
+					AttachStdin:  false,
+					AttachStdout: true,
+					AttachStderr: true,
+					Tty:          false,
+					Cmd:          strings.Split(cmd, " "),
+				}
+				execObj, err := b.docker.CreateExec(execOpts)
+				if err != nil {
+					return err
+				}
+
+				success := make(chan struct{})
+				startExecOpts := docker.StartExecOptions{
+					OutputStream: os.Stdout,
+					ErrorStream:  os.Stderr,
+					RawTerminal:  true,
+				}
+
+				go func() {
+					if err := b.docker.StartExec(execObj.ID, startExecOpts); err != nil {
+						b.Conf.Logger.Error("Failed to run cleanup commands %s", err.Error())
+					}
+					success <- struct{}{}
+				}()
+				<-success
+			}
+
+			b.Conf.Logger.Debug("Stopping the container")
+			err = b.docker.StopContainer(container.ID, 0)
+			if err != nil {
+				return err
+			}
+		}
+
+		if len(step.Artefacts) > 0 {
+			b.Conf.Logger.Notice("Copying artefacts")
+
+			for _, art := range step.Artefacts {
+				err = b.copyToHost(&art, container.ID)
+				if err != nil {
+					return err
+				}
 			}
 		}
 
@@ -256,10 +310,12 @@ func (b *Builder) createContainer(step *Step) (*docker.Container, error) {
 	config := docker.Config{
 		AttachStdout: true,
 		AttachStdin:  false,
-		AttachStderr: false,
+		AttachStderr: true,
 		Image:        b.uniqueStepName(step),
-		Cmd:          []string{""},
+		Cmd:          []string{"/bin/bash"},
+		Tty:          true,
 	}
+
 	opts := docker.CreateContainerOptions{
 		Name:   b.uniqueStepName(step) + "." + uniuri.New(),
 		Config: &config,

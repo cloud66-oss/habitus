@@ -6,6 +6,12 @@ steps:
     keep: false
     artefacts:
       - /go/src/go-service/go-service
+    cleanup:
+      commands:
+        - apt-get purge -y man  perl-modules vim-common vim-tiny libpython3.4-stdlib:amd64 python3.4-minimal xkb-data libx11-data eject python3 locales golang-go
+        - apt-get clean autoclean
+        - apt-get autoremove -y
+        - rm -rf /var/lib/{apt,dpkg,cache,log}/
   - step_two:
     name: steptwo
     dockerfile: Dockerfile.main
