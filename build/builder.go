@@ -104,6 +104,7 @@ func (b *Builder) StartBuild(startStep string) error {
 			continue
 		}
 
+		b.Conf.Logger.Debug("Removing unwanted image %s", b.uniqueStepName(&s))
 		err := b.docker.RemoveImage(b.uniqueStepName(&s))
 		if err != nil {
 			return err
@@ -163,7 +164,7 @@ func (b *Builder) BuildStep(step *Step) error {
 
 		if len(step.Cleanup.Commands) > 0 {
 			// start the container
-			b.Conf.Logger.Notice("Starting container to run cleanup commands")
+			b.Conf.Logger.Notice("Starting container %s to run cleanup commands", container.ID)
 			startOpts := &docker.HostConfig{}
 			err := b.docker.StartContainer(container.ID, startOpts)
 			if err != nil {
@@ -171,7 +172,7 @@ func (b *Builder) BuildStep(step *Step) error {
 			}
 
 			for _, cmd := range step.Cleanup.Commands {
-				b.Conf.Logger.Debug("Running cleanup command %s", cmd)
+				b.Conf.Logger.Debug("Running cleanup command %s on %s", cmd, container.ID)
 				// create an exec for the commands
 				execOpts := docker.CreateExecOptions{
 					Container:    container.ID,
@@ -207,13 +208,13 @@ func (b *Builder) BuildStep(step *Step) error {
 				Container: container.ID,
 			}
 
-			b.Conf.Logger.Debug("Commiting the container into an image")
+			b.Conf.Logger.Debug("Commiting the container %s", container.ID)
 			img, err := b.docker.CommitContainer(cmtOpts)
 			if err != nil {
 				return err
 			}
 
-			b.Conf.Logger.Debug("Stopping the container")
+			b.Conf.Logger.Debug("Stopping the container %s", container.ID)
 			err = b.docker.StopContainer(container.ID, 0)
 			if err != nil {
 				return err
@@ -235,7 +236,7 @@ func (b *Builder) BuildStep(step *Step) error {
 				OutputStream: tarWriter,
 			}
 
-			b.Conf.Logger.Notice("Exporting cleaned up container to %s", tmpFile.Name())
+			b.Conf.Logger.Notice("Exporting cleaned up container %s to %s", img.ID, tmpFile.Name())
 			err = b.docker.ExportImage(expOpts)
 			if err != nil {
 				return err
@@ -247,22 +248,35 @@ func (b *Builder) BuildStep(step *Step) error {
 				return err
 			}
 			defer sqTmpFile.Close()
-			b.Conf.Logger.Notice("Squashing the image into %s", sqTmpFile.Name())
+			b.Conf.Logger.Notice("Squashing image %s into %s", sqTmpFile.Name(), img.ID)
 
 			squasher := squash.Squasher{Conf: b.Conf}
-			err = squasher.Squash(tmpFile.Name(), sqTmpFile.Name(), "squashed")
+			err = squasher.Squash(tmpFile.Name(), sqTmpFile.Name(), b.uniqueStepName(step))
 			if err != nil {
 				return err
 			}
-
-			return nil
 
 			b.Conf.Logger.Debug("Removing exported temp files")
 			err = os.Remove(tmpFile.Name())
 			if err != nil {
 				return err
 			}
-			// TODO: Load
+			// Load
+			sqashedFile, err := os.Open(sqTmpFile.Name())
+			if err != nil {
+				return err
+			}
+			defer sqashedFile.Close()
+
+			loadOps := docker.LoadImageOptions{
+				InputStream: sqashedFile,
+			}
+			b.Conf.Logger.Debug("Loading squashed image into docker")
+			err = b.docker.LoadImage(loadOps)
+			if err != nil {
+				return err
+			}
+
 			err = os.Remove(sqTmpFile.Name())
 			if err != nil {
 				return err
@@ -270,7 +284,7 @@ func (b *Builder) BuildStep(step *Step) error {
 		}
 
 		if len(step.Artefacts) > 0 {
-			b.Conf.Logger.Notice("Copying artefacts")
+			b.Conf.Logger.Notice("Copying artefacts from %s", container.ID)
 
 			for _, art := range step.Artefacts {
 				err = b.copyToHost(&art, container.ID)
@@ -287,7 +301,7 @@ func (b *Builder) BuildStep(step *Step) error {
 			Force:         true,
 		}
 
-		b.Conf.Logger.Debug("Removing built container '%s'", container.ID)
+		b.Conf.Logger.Debug("Removing built container %s", container.ID)
 		err = b.docker.RemoveContainer(removeOpts)
 		if err != nil {
 			return err
