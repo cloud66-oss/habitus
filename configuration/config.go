@@ -12,6 +12,8 @@ type Config struct {
 	ForceRmTmpContainer bool
 	UniqueID            string
 	Logger              logging.Logger
+	DockerHost          string
+	DockerCert          string
 }
 
 // CreateConfig creates a new configuration object

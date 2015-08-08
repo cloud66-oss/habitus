@@ -33,6 +33,8 @@ func main() {
 	flag.StringVar(&config.StartStep, "s", "", "Starting step for the build")
 	flag.StringVar(&config.UniqueID, "uid", "", "Unique ID for the build. Used only for multi-tenanted build environments")
 	flag.StringVar(&flagLevel, "level", "debug", "Log level: debug, info, notice, warning, error and critical")
+	flag.StringVar(&config.DockerHost, "host", os.Getenv("DOCKER_HOST"), "Docker host link. Uses DOCKER_HOST if missing")
+	flag.StringVar(&config.DockerCert, "certs", os.Getenv("DOCKER_CERT_PATH"), "Docker cert folder. Uses DOCKER_CERT_PATH if missing")
 
 	config.Logger = *log
 
@@ -53,9 +55,15 @@ func main() {
 
 	c, err := build.LoadBuildFromFile(&config)
 	if err != nil {
-		log.Fatalf("Failed: %s\n", err.Error())
+		log.Fatalf("Failed: %s", err.Error())
 	}
 
+	/*
+		squasher := squash.Squasher{Conf: &config}
+		err = squasher.Squash("/var/folders/_9/f5_3_0cn02sfvf9yjn1n1x3c0000gn/T/cxbuild-export-419347354", "/tmp/test.tar", "squashed")
+
+		return
+	*/
 	b := build.NewBuilder(c, &config)
 	err = b.StartBuild(config.StartStep)
 	if err != nil {
