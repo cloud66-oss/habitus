@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/cloud66/cxbuild/configuration"
+	"github.com/cloud66/cxbuild/squash"
 	"github.com/dchest/uniuri"
 	"github.com/docker/docker/builder/parser"
 	"github.com/fsouza/go-dockerclient"
@@ -35,12 +36,17 @@ func NewBuilder(manifest *Manifest, conf *configuration.Config) *Builder {
 	b.UniqueID = conf.UniqueID
 	b.Conf = conf
 
-	certPath := os.Getenv("DOCKER_CERT_PATH")
-	endpoint := os.Getenv("DOCKER_HOST")
+	certPath := b.Conf.DockerCert
+	endpoint := b.Conf.DockerHost
 	ca := path.Join(certPath, "ca.pem")
 	cert := path.Join(certPath, "cert.pem")
 	key := path.Join(certPath, "key.pem")
 	client, err := docker.NewTLSClient(endpoint, cert, key, ca)
+	if err != nil {
+		b.Conf.Logger.Fatal(err.Error())
+		return nil
+	}
+
 	b.docker = *client
 
 	usr, err := user.Current()
@@ -98,6 +104,7 @@ func (b *Builder) StartBuild(startStep string) error {
 			continue
 		}
 
+		b.Conf.Logger.Debug("Removing unwanted image %s", b.uniqueStepName(&s))
 		err := b.docker.RemoveImage(b.uniqueStepName(&s))
 		if err != nil {
 			return err
@@ -145,18 +152,145 @@ func (b *Builder) BuildStep(step *Step) error {
 	}
 
 	// if there are any artefacts to be picked up, create a container and copy them over
-	if len(step.Artefacts) > 0 {
-		b.Conf.Logger.Notice("Copying artefacts")
+	// we also need a container if there are cleanup commands
+	if len(step.Artefacts) > 0 || len(step.Cleanup.Commands) > 0 {
+		b.Conf.Logger.Notice("Building container based on the image")
+
 		// create a container
 		container, err := b.createContainer(step)
 		if err != nil {
 			return err
 		}
 
-		for _, art := range step.Artefacts {
-			err = b.copyToHost(&art, container.ID)
+		if len(step.Cleanup.Commands) > 0 {
+			// start the container
+			b.Conf.Logger.Notice("Starting container %s to run cleanup commands", container.ID)
+			startOpts := &docker.HostConfig{}
+			err := b.docker.StartContainer(container.ID, startOpts)
 			if err != nil {
 				return err
+			}
+
+			for _, cmd := range step.Cleanup.Commands {
+				b.Conf.Logger.Debug("Running cleanup command %s on %s", cmd, container.ID)
+				// create an exec for the commands
+				execOpts := docker.CreateExecOptions{
+					Container:    container.ID,
+					AttachStdin:  false,
+					AttachStdout: true,
+					AttachStderr: true,
+					Tty:          false,
+					Cmd:          strings.Split(cmd, " "),
+				}
+				execObj, err := b.docker.CreateExec(execOpts)
+				if err != nil {
+					return err
+				}
+
+				success := make(chan struct{})
+				startExecOpts := docker.StartExecOptions{
+					OutputStream: os.Stdout,
+					ErrorStream:  os.Stderr,
+					RawTerminal:  true,
+				}
+
+				go func() {
+					if err := b.docker.StartExec(execObj.ID, startExecOpts); err != nil {
+						b.Conf.Logger.Error("Failed to run cleanup commands %s", err.Error())
+					}
+					success <- struct{}{}
+				}()
+				<-success
+			}
+
+			// commit the container
+			cmtOpts := docker.CommitContainerOptions{
+				Container: container.ID,
+			}
+
+			b.Conf.Logger.Debug("Commiting the container %s", container.ID)
+			img, err := b.docker.CommitContainer(cmtOpts)
+			if err != nil {
+				return err
+			}
+
+			b.Conf.Logger.Debug("Stopping the container %s", container.ID)
+			err = b.docker.StopContainer(container.ID, 0)
+			if err != nil {
+				return err
+			}
+
+			tmpFile, err := ioutil.TempFile("", "cxbuild-export-")
+			if err != nil {
+				return err
+			}
+			defer tmpFile.Close()
+			tarWriter, err := os.Create(tmpFile.Name())
+			if err != nil {
+				return err
+			}
+			defer tarWriter.Close()
+			// save the container
+			expOpts := docker.ExportImageOptions{
+				Name:         img.ID,
+				OutputStream: tarWriter,
+			}
+
+			b.Conf.Logger.Notice("Exporting cleaned up container %s to %s", img.ID, tmpFile.Name())
+			err = b.docker.ExportImage(expOpts)
+			if err != nil {
+				return err
+			}
+
+			// Squash
+			sqTmpFile, err := ioutil.TempFile("", "cxbuild-export-")
+			if err != nil {
+				return err
+			}
+			defer sqTmpFile.Close()
+			b.Conf.Logger.Notice("Squashing image %s into %s", sqTmpFile.Name(), img.ID)
+
+			squasher := squash.Squasher{Conf: b.Conf}
+			err = squasher.Squash(tmpFile.Name(), sqTmpFile.Name(), b.uniqueStepName(step))
+			if err != nil {
+				return err
+			}
+
+			b.Conf.Logger.Debug("Removing exported temp files")
+			err = os.Remove(tmpFile.Name())
+			if err != nil {
+				return err
+			}
+			// Load
+			sqashedFile, err := os.Open(sqTmpFile.Name())
+			if err != nil {
+				return err
+			}
+			defer sqashedFile.Close()
+
+			loadOps := docker.LoadImageOptions{
+				InputStream: sqashedFile,
+			}
+			b.Conf.Logger.Debug("Loading squashed image into docker")
+			err = b.docker.LoadImage(loadOps)
+			if err != nil {
+				return err
+			}
+
+			err = os.Remove(sqTmpFile.Name())
+			if err != nil {
+				return err
+			}
+		}
+
+		if len(step.Artefacts) > 0 {
+			b.Conf.Logger.Notice("Copying artefacts from %s", container.ID)
+
+			for _, art := range step.Artefacts {
+				err = b.copyToHost(&art, container.ID)
+				if err != nil {
+					return err
+				}
 			}
 		}
 
@@ -167,7 +301,7 @@ func (b *Builder) BuildStep(step *Step) error {
 			Force:         true,
 		}
 
-		b.Conf.Logger.Debug("Removing built container '%s'", container.ID)
+		b.Conf.Logger.Debug("Removing built container %s", container.ID)
 		err = b.docker.RemoveContainer(removeOpts)
 		if err != nil {
 			return err
@@ -256,10 +390,12 @@ func (b *Builder) createContainer(step *Step) (*docker.Container, error) {
 	config := docker.Config{
 		AttachStdout: true,
 		AttachStdin:  false,
-		AttachStderr: false,
+		AttachStderr: true,
 		Image:        b.uniqueStepName(step),
-		Cmd:          []string{""},
+		Cmd:          []string{"/bin/bash"},
+		Tty:          true,
 	}
+
 	opts := docker.CreateContainerOptions{
 		Name:   b.uniqueStepName(step) + "." + uniuri.New(),
 		Config: &config,

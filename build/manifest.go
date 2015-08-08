@@ -18,6 +18,11 @@ type Artefact struct {
 	Dest   string // this is only the folder. Filename comes from the source
 }
 
+// Cleanup holds everything that's needed for a cleanup
+type Cleanup struct {
+	Commands []string
+}
+
 // Step Holds a single step in the build process
 // Public structs. They are used to store the build for the builders
 type Step struct {
@@ -27,6 +32,7 @@ type Step struct {
 	Keep       bool
 	Artefacts  []Artefact
 	Manifest   Manifest
+	Cleanup    *Cleanup
 }
 
 // Manifest Holds the whole build process
@@ -35,12 +41,17 @@ type Manifest struct {
 	Steps   []Step
 }
 
+type cleanup struct {
+	Commands []string
+}
+
 // Private structs. They are used to load from yaml
 type step struct {
 	Name       string
 	Dockerfile string
 	Keep       bool
 	Artefacts  []string
+	Cleanup    *cleanup
 }
 
 type build struct {
@@ -81,7 +92,12 @@ func (b *build) convertToBuild() (*Manifest, error) {
 		convertedStep.Order = idx
 		convertedStep.Keep = s.Keep
 		convertedStep.Artefacts = []Artefact{}
-
+		if s.Cleanup != nil {
+			convertedStep.Cleanup = &Cleanup{ Commands: s.Cleanup.Commands }
+		} else {
+			convertedStep.Cleanup = &Cleanup{}
+		}
+		
 		for kdx, a := range s.Artefacts {
 			convertedArt := Artefact{}
 
