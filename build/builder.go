@@ -99,7 +99,7 @@ func (b *Builder) StartBuild(startStep string) error {
 	}
 
 	// Clear after yourself: images, containers, etc (optional for premium users)
-	for _, s := range b.Build.Steps {
+	for _, s := range steps {
 		if s.Keep {
 			continue
 		}
@@ -188,13 +188,14 @@ func (b *Builder) BuildStep(step *Step) error {
 				}
 
 				success := make(chan struct{})
-				startExecOpts := docker.StartExecOptions{
-					OutputStream: os.Stdout,
-					ErrorStream:  os.Stderr,
-					RawTerminal:  true,
-				}
 
 				go func() {
+					startExecOpts := docker.StartExecOptions{
+						OutputStream: os.Stdout,
+						ErrorStream:  os.Stderr,
+						RawTerminal:  true,
+					}
+
 					if err := b.docker.StartExec(execObj.ID, startExecOpts); err != nil {
 						b.Conf.Logger.Error("Failed to run cleanup commands %s", err.Error())
 					}

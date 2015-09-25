@@ -58,12 +58,6 @@ func main() {
 		log.Fatalf("Failed: %s", err.Error())
 	}
 
-	/*
-		squasher := squash.Squasher{Conf: &config}
-		err = squasher.Squash("/var/folders/_9/f5_3_0cn02sfvf9yjn1n1x3c0000gn/T/cxbuild-export-419347354", "/tmp/test.tar", "squashed")
-
-		return
-	*/
 	b := build.NewBuilder(c, &config)
 	err = b.StartBuild(config.StartStep)
 	if err != nil {

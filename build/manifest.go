@@ -93,11 +93,11 @@ func (b *build) convertToBuild() (*Manifest, error) {
 		convertedStep.Keep = s.Keep
 		convertedStep.Artefacts = []Artefact{}
 		if s.Cleanup != nil {
-			convertedStep.Cleanup = &Cleanup{ Commands: s.Cleanup.Commands }
+			convertedStep.Cleanup = &Cleanup{Commands: s.Cleanup.Commands}
 		} else {
 			convertedStep.Cleanup = &Cleanup{}
 		}
-		
+
 		for kdx, a := range s.Artefacts {
 			convertedArt := Artefact{}
 
