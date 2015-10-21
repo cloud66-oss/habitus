@@ -14,7 +14,7 @@ import (
 	"github.com/cloud66/cxbuild/configuration"
 	"github.com/cloud66/cxbuild/squash"
 	"github.com/dchest/uniuri"
-	"github.com/docker/docker/builder/parser"
+	"github.com/docker/docker/builder/dockerfile/parser"
 	"github.com/fsouza/go-dockerclient"
 )
 
