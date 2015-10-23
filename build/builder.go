@@ -1,9 +1,12 @@
 package build
 
 import (
+	"archive/tar"
+	"bytes"
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/user"
@@ -362,6 +365,17 @@ func (b *Builder) replaceFromField(step *Step) error {
 	return nil
 }
 
+func overwrite(mpath string) (*os.File, error) {
+	f, err := os.OpenFile(mpath, os.O_RDWR|os.O_TRUNC, 0777)
+	if err != nil {
+		f, err = os.Create(mpath)
+		if err != nil {
+			return f, err
+		}
+	}
+	return f, nil
+}
+
 func (b *Builder) copyToHost(a *Artefact, container string) error {
 	// create the dest folder if not there
 	err := os.MkdirAll(a.Dest, 0777)
@@ -369,22 +383,49 @@ func (b *Builder) copyToHost(a *Artefact, container string) error {
 		return err
 	}
 
-	destFile := path.Join(b.Build.Workdir, a.Dest, filepath.Base(a.Source))
-	dest, err := os.Create(destFile)
+	var out bytes.Buffer
+
+	opt := docker.DownloadFromContainerOptions{
+		OutputStream: &out,
+		Path:         a.Source,
+	}
+
+	err = b.docker.DownloadFromContainer(container, opt)
 	if err != nil {
 		return err
 	}
-	defer dest.Close()
 
-	opt := docker.CopyFromContainerOptions{
-		OutputStream: dest,
-		Container:    container,
-		Resource:     a.Source,
+	tr := tar.NewReader(&out)
+	for {
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			// end of tar archive
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		switch hdr.Typeflag {
+		case tar.TypeReg:
+			destFile := path.Join(b.Build.Workdir, a.Dest, filepath.Base(a.Source))
+			b.Conf.Logger.Info("Copying from %s to %s", a.Source, destFile)
+
+			dest, err := os.Create(destFile)
+			if err != nil {
+				return err
+			}
+			defer dest.Close()
+
+			if _, err := io.Copy(dest, tr); err != nil {
+				return err
+			}
+		default:
+			return errors.New("Invalid header type")
+		}
 	}
 
-	b.Conf.Logger.Info("Copying from %s to %s", a.Source, destFile)
-
-	return b.docker.CopyFromContainer(opt)
+	return nil
 }
 
 func (b *Builder) createContainer(step *Step) (*docker.Container, error) {
