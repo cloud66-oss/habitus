@@ -1,0 +1,37 @@
+{
+	"ImportPath": "github.com/cloud66/cxbuild",
+	"GoVersion": "go1.5.1",
+	"Deps": [
+		{
+			"ImportPath": "github.com/dchest/uniuri",
+			"Rev": "a64716164ed9ab199e34c152969bfb6b8748dbb9"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/builder/dockerfile/command",
+			"Comment": "v1.4.1-7144-g448398c",
+			"Rev": "448398c2a8a41b6589dd7deb59fdc889e78db223"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/builder/dockerfile/parser",
+			"Comment": "v1.4.1-7144-g448398c",
+			"Rev": "448398c2a8a41b6589dd7deb59fdc889e78db223"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/pkg/units",
+			"Comment": "v1.4.1-7144-g448398c",
+			"Rev": "448398c2a8a41b6589dd7deb59fdc889e78db223"
+		},
+		{
+			"ImportPath": "github.com/fsouza/go-dockerclient",
+			"Rev": "af9789bbd78acf3e279274caa54682185eb7ed33"
+		},
+		{
+			"ImportPath": "github.com/op/go-logging",
+			"Rev": "e8d5414f0947014548c2334044a0fac13187dfee"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "49c95bdc21843256fb6c4e0d370a05f24a0bf213"
+		}
+	]
+}
