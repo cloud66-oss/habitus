@@ -3,6 +3,8 @@ package build
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
+	"regexp"
 	"strings"
 
 	"github.com/cloud66/cxbuild/configuration"
@@ -69,6 +71,8 @@ func LoadBuildFromFile(config *configuration.Config) (*Manifest, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	data = parseForEnvVars(config, data)
 
 	err = yaml.Unmarshal([]byte(data), &t)
 	if err != nil {
@@ -137,4 +141,21 @@ func (m *Manifest) FindStepByName(name string) (*Step, error) {
 	}
 
 	return nil, nil
+}
+
+func parseForEnvVars(config *configuration.Config, value []byte) []byte {
+	r, _ := regexp.Compile("_env\\((.*)\\)")
+
+	matched := r.ReplaceAllFunc(value, func(s []byte) []byte {
+		m := string(s)
+		parts := r.FindStringSubmatch(m)
+
+		if len(config.EnvVars) == 0 {
+			return []byte(os.Getenv(parts[1]))
+		} else {
+			return []byte(config.EnvVars.Find(parts[1]))
+		}
+	})
+
+	return matched
 }

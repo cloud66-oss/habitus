@@ -35,6 +35,7 @@ func main() {
 	flag.StringVar(&flagLevel, "level", "debug", "Log level: debug, info, notice, warning, error and critical")
 	flag.StringVar(&config.DockerHost, "host", os.Getenv("DOCKER_HOST"), "Docker host link. Uses DOCKER_HOST if missing")
 	flag.StringVar(&config.DockerCert, "certs", os.Getenv("DOCKER_CERT_PATH"), "Docker cert folder. Uses DOCKER_CERT_PATH if missing")
+	flag.Var(&config.EnvVars, "env", "Environment variables to be used during build. If empty cxbuild uses parent process environment variables")
 
 	config.Logger = *log
 
