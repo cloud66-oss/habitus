@@ -8,6 +8,8 @@ import (
 	"github.com/cloud66/cxbuild/build"
 	"github.com/cloud66/cxbuild/configuration"
 	"github.com/op/go-logging"
+
+	"github.com/bugsnag/bugsnag-go"
 )
 
 var format = logging.MustStringFormatter(
@@ -16,10 +18,21 @@ var format = logging.MustStringFormatter(
 
 var (
 	flagLevel string
+	VERSION         string = "dev"
+	BUILD_DATE      string = ""
 )
+
+func init() {
+	bugsnag.Configure(bugsnag.Configuration{
+		// TODO: APIKey should change
+		APIKey:     "dbab949a68d8fd7e522a3abf9bb4024a",
+		AppVersion: VERSION,
+	})
+}
 
 func main() {
 	args := os.Args[1:]
+	defer bugsnag.AutoNotify()
 
 	var log = logging.MustGetLogger("cxbuilder")
 	logging.SetFormatter(format)

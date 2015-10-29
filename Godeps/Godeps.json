@@ -3,6 +3,19 @@
 	"GoVersion": "go1.5.1",
 	"Deps": [
 		{
+			"ImportPath": "github.com/bugsnag/bugsnag-go",
+			"Comment": "v1.0.5-2-g72ff9e1",
+			"Rev": "72ff9e15e8c5ae52e8db1dd5dd1f77a9f2f1a895"
+		},
+		{
+			"ImportPath": "github.com/bugsnag/osext",
+			"Rev": "0dd3f918b21bec95ace9dc86c7e70266cfc5c702"
+		},
+		{
+			"ImportPath": "github.com/bugsnag/panicwrap",
+			"Rev": "e5f9854865b9778a45169fc249e99e338d4d6f27"
+		},
+		{
 			"ImportPath": "github.com/dchest/uniuri",
 			"Rev": "a64716164ed9ab199e34c152969bfb6b8748dbb9"
 		},
