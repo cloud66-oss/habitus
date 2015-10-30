@@ -24,8 +24,7 @@ var (
 
 func init() {
 	bugsnag.Configure(bugsnag.Configuration{
-		// TODO: APIKey should change
-		APIKey:     "dbab949a68d8fd7e522a3abf9bb4024a",
+		APIKey:     "ba9d7ae6b333e27971d86e5bf7abe996",
 		AppVersion: VERSION,
 	})
 }
@@ -33,6 +32,8 @@ func init() {
 func main() {
 	args := os.Args[1:]
 	defer bugsnag.AutoNotify()
+
+	panic("cxbuild: Don't panic it's a test")
 
 	var log = logging.MustGetLogger("cxbuilder")
 	logging.SetFormatter(format)
