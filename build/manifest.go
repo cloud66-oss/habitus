@@ -39,8 +39,7 @@ type Step struct {
 
 // Manifest Holds the whole build process
 type Manifest struct {
-	Workdir string
-	Steps   []Step
+	Steps []Step
 }
 
 type cleanup struct {
@@ -84,7 +83,6 @@ func LoadBuildFromFile(config *configuration.Config) (*Manifest, error) {
 
 func (b *build) convertToBuild() (*Manifest, error) {
 	r := Manifest{}
-	r.Workdir = b.Workdir
 	r.Steps = []Step{}
 
 	for idx, s := range b.Steps {

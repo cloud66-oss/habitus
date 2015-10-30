@@ -142,7 +142,7 @@ func (b *Builder) BuildStep(step *Step) error {
 		RmTmpContainer:      b.Conf.RmTmpContainers,
 		ForceRmTmpContainer: b.Conf.ForceRmTmpContainer,
 		OutputStream:        os.Stdout, // TODO: use a multi writer to get a stream out for the API
-		ContextDir:          b.Build.Workdir,
+		ContextDir:          b.Conf.Workdir,
 	}
 
 	if b.auth != nil {
@@ -326,7 +326,7 @@ func (b *Builder) BuildStep(step *Step) error {
 func (b *Builder) replaceFromField(step *Step) error {
 	b.Conf.Logger.Notice("Parsing and converting '%s'", step.Dockerfile)
 
-	rwc, err := os.Open(path.Join(b.Build.Workdir, step.Dockerfile))
+	rwc, err := os.Open(path.Join(b.Conf.Workdir, step.Dockerfile))
 	if err != nil {
 		return err
 	}
@@ -408,7 +408,7 @@ func (b *Builder) copyToHost(a *Artefact, container string) error {
 
 		switch hdr.Typeflag {
 		case tar.TypeReg:
-			destFile := path.Join(b.Build.Workdir, a.Dest, filepath.Base(a.Source))
+			destFile := path.Join(b.Conf.Workdir, a.Dest, filepath.Base(a.Source))
 			b.Conf.Logger.Info("Copying from %s to %s", a.Source, destFile)
 
 			dest, err := os.Create(destFile)
@@ -476,5 +476,5 @@ func dumpDockerfile(node *parser.Node) string {
 }
 
 func (b *Builder) uniqueDockerfile(step *Step) string {
-	return filepath.Join(b.Build.Workdir, b.uniqueStepName(step))
+	return filepath.Join(b.Conf.Workdir, b.uniqueStepName(step))
 }

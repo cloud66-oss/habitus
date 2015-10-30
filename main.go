@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/cloud66/cxbuild/build"
 	"github.com/cloud66/cxbuild/configuration"
@@ -25,7 +26,8 @@ func main() {
 	logging.SetFormatter(format)
 
 	config := configuration.CreateConfig()
-	flag.StringVar(&config.Buildfile, "f", "./build.yml", "Build file path")
+	flag.StringVar(&config.Buildfile, "f", "build.yml", "Build file path. Defaults to build.yml in the workdir")
+	flag.StringVar(&config.Workdir, "d", "", "work directory for this build. Defaults to the current directory")
 	flag.BoolVar(&config.NoCache, "no-cache", false, "Use cache in build")
 	flag.BoolVar(&config.SuppressOutput, "suppress", false, "Suppress build output")
 	flag.BoolVar(&config.RmTmpContainers, "rm", true, "Remove intermediate containers")
@@ -53,6 +55,19 @@ func main() {
 		level = logging.DEBUG
 	}
 	logging.SetLevel(level, "cxbuilder")
+
+	if config.Workdir == "" {
+		if curr, err := os.Getwd(); err != nil {
+			log.Fatal("Failed to get the current directory")
+			os.Exit(1)
+		} else {
+			config.Workdir = curr
+		}
+	}
+
+	if config.Buildfile == "build.yml" {
+		config.Buildfile = filepath.Join(config.Workdir, "build.yml")
+	}
 
 	c, err := build.LoadBuildFromFile(&config)
 	if err != nil {

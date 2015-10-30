@@ -17,6 +17,7 @@ type EnvVarsArray []EnvVarItem
 // Config stores application configurations
 type Config struct {
 	Buildfile           string
+	Workdir             string
 	StartStep           string
 	NoCache             bool
 	SuppressOutput      bool
