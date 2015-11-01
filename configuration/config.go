@@ -28,6 +28,7 @@ type Config struct {
 	DockerHost          string
 	DockerCert          string
 	EnvVars             EnvVarsArray
+	OverrideKeep        bool
 }
 
 func (i *EnvVarsArray) String() string {

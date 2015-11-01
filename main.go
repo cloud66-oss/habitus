@@ -38,6 +38,7 @@ func main() {
 	flag.StringVar(&config.DockerHost, "host", os.Getenv("DOCKER_HOST"), "Docker host link. Uses DOCKER_HOST if missing")
 	flag.StringVar(&config.DockerCert, "certs", os.Getenv("DOCKER_CERT_PATH"), "Docker cert folder. Uses DOCKER_CERT_PATH if missing")
 	flag.Var(&config.EnvVars, "env", "Environment variables to be used during build. If empty cxbuild uses parent process environment variables")
+	flag.BoolVar(&config.OverrideKeep, "keep-all", false, "Override keep flag for all steps. Used for degging each step")
 
 	config.Logger = *log
 
@@ -72,6 +73,11 @@ func main() {
 	c, err := build.LoadBuildFromFile(&config)
 	if err != nil {
 		log.Fatalf("Failed: %s", err.Error())
+	}
+
+	if c.IsPrivileged && os.Getenv("SUDO_USER") == "" {
+		log.Fatal("Some of the build steps require admin privileges (sudo). Please run with sudo")
+		os.Exit(1)
 	}
 
 	b := build.NewBuilder(c, &config)

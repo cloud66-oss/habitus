@@ -103,7 +103,7 @@ func (b *Builder) StartBuild(startStep string) error {
 
 	// Clear after yourself: images, containers, etc (optional for premium users)
 	for _, s := range steps {
-		if s.Keep {
+		if s.Keep || b.Conf.OverrideKeep {
 			continue
 		}
 

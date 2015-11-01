@@ -39,7 +39,8 @@ type Step struct {
 
 // Manifest Holds the whole build process
 type Manifest struct {
-	Steps []Step
+	Steps        []Step
+	IsPrivileged bool
 }
 
 type cleanup struct {
@@ -83,6 +84,7 @@ func LoadBuildFromFile(config *configuration.Config) (*Manifest, error) {
 
 func (b *build) convertToBuild() (*Manifest, error) {
 	r := Manifest{}
+	r.IsPrivileged = false
 	r.Steps = []Step{}
 
 	for idx, s := range b.Steps {
@@ -96,6 +98,7 @@ func (b *build) convertToBuild() (*Manifest, error) {
 		convertedStep.Artefacts = []Artefact{}
 		if s.Cleanup != nil {
 			convertedStep.Cleanup = &Cleanup{Commands: s.Cleanup.Commands}
+			r.IsPrivileged = true
 		} else {
 			convertedStep.Cleanup = &Cleanup{}
 		}
