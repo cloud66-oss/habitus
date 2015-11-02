@@ -33,8 +33,6 @@ func main() {
 	args := os.Args[1:]
 	defer bugsnag.AutoNotify()
 
-	panic("cxbuild: Don't panic it's a test")
-
 	var log = logging.MustGetLogger("cxbuilder")
 	logging.SetFormatter(format)
 
