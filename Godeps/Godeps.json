@@ -43,6 +43,10 @@
 			"Rev": "e8d5414f0947014548c2334044a0fac13187dfee"
 		},
 		{
+			"ImportPath": "github.com/satori/go.uuid",
+			"Rev": "d41af8bb6a7704f00bc3b7cba9355ae6a5a80048"
+		},
+		{
 			"ImportPath": "gopkg.in/yaml.v2",
 			"Rev": "49c95bdc21843256fb6c4e0d370a05f24a0bf213"
 		}

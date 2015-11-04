@@ -59,13 +59,14 @@ type step struct {
 type build struct {
 	Workdir string
 	Steps   []step
+	Config  *configuration.Config
 }
 
 // LoadBuildFromFile loads Build from a yaml file
 func LoadBuildFromFile(config *configuration.Config) (*Manifest, error) {
 	config.Logger.Notice("Using '%s' as build file", config.Buildfile)
 
-	t := build{}
+	t := build{Config: config}
 
 	data, err := ioutil.ReadFile(config.Buildfile)
 	if err != nil {
@@ -96,7 +97,7 @@ func (b *build) convertToBuild() (*Manifest, error) {
 		convertedStep.Order = idx
 		convertedStep.Keep = s.Keep
 		convertedStep.Artefacts = []Artefact{}
-		if s.Cleanup != nil {
+		if s.Cleanup != nil && !b.Config.NoSquash {
 			convertedStep.Cleanup = &Cleanup{Commands: s.Cleanup.Commands}
 			r.IsPrivileged = true
 		} else {

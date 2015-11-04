@@ -29,6 +29,10 @@ type Config struct {
 	DockerCert          string
 	EnvVars             EnvVarsArray
 	OverrideKeep        bool
+	NoSquash            bool
+	TempDir             string
+	NoPruneRmImages     bool
+	FroceRmImages       bool
 }
 
 func (i *EnvVarsArray) String() string {

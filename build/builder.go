@@ -19,6 +19,7 @@ import (
 	"github.com/dchest/uniuri"
 	"github.com/docker/docker/builder/dockerfile/parser"
 	"github.com/fsouza/go-dockerclient"
+	"github.com/satori/go.uuid"
 )
 
 // Builder is a simple Dockerfile builder
@@ -27,9 +28,11 @@ type Builder struct {
 	UniqueID string // unique id for this build sequence. This is used for multi-tenanted environments
 	Conf     *configuration.Config
 
-	config *tls.Config
-	docker docker.Client
-	auth   *docker.AuthConfigurations
+	config    *tls.Config
+	docker    docker.Client
+	auth      *docker.AuthConfigurations
+	builderId string // unique id for this builder session (used internally)
+	tempDir   string // temp folder used by this builder
 }
 
 // NewBuilder creates a new builder in a new session
@@ -38,6 +41,15 @@ func NewBuilder(manifest *Manifest, conf *configuration.Config) *Builder {
 	b.Build = manifest
 	b.UniqueID = conf.UniqueID
 	b.Conf = conf
+	b.builderId = uuid.NewV4().String()
+
+	td, err := ioutil.TempDir(b.Conf.TempDir, "cxbuild-"+b.builderId+"-"+b.Conf.UniqueID)
+	if err != nil {
+		b.Conf.Logger.Fatal(err.Error())
+		return nil
+	}
+
+	b.tempDir = td
 
 	certPath := b.Conf.DockerCert
 	endpoint := b.Conf.DockerHost
@@ -108,7 +120,8 @@ func (b *Builder) StartBuild(startStep string) error {
 		}
 
 		b.Conf.Logger.Debug("Removing unwanted image %s", b.uniqueStepName(&s))
-		err := b.docker.RemoveImage(b.uniqueStepName(&s))
+		rmiOptions := docker.RemoveImageOptions{Force: b.Conf.FroceRmImages, NoPrune: b.Conf.NoPruneRmImages}
+		err := b.docker.RemoveImageExtended(b.uniqueStepName(&s), rmiOptions)
 		if err != nil {
 			return err
 		}
@@ -165,7 +178,7 @@ func (b *Builder) BuildStep(step *Step) error {
 			return err
 		}
 
-		if len(step.Cleanup.Commands) > 0 {
+		if !b.Conf.NoSquash && len(step.Cleanup.Commands) > 0 {
 			// start the container
 			b.Conf.Logger.Notice("Starting container %s to run cleanup commands", container.ID)
 			startOpts := &docker.HostConfig{}
@@ -377,8 +390,10 @@ func overwrite(mpath string) (*os.File, error) {
 }
 
 func (b *Builder) copyToHost(a *Artefact, container string) error {
+	// use the temp folder as base
+	dest := filepath.Join(b.tempDir, a.Dest)
 	// create the dest folder if not there
-	err := os.MkdirAll(a.Dest, 0777)
+	err := os.MkdirAll(dest, 0777)
 	if err != nil {
 		return err
 	}
@@ -408,7 +423,7 @@ func (b *Builder) copyToHost(a *Artefact, container string) error {
 
 		switch hdr.Typeflag {
 		case tar.TypeReg:
-			destFile := path.Join(b.Conf.Workdir, a.Dest, filepath.Base(a.Source))
+			destFile := path.Join(dest, filepath.Base(a.Source))
 			b.Conf.Logger.Info("Copying from %s to %s", a.Source, destFile)
 
 			dest, err := os.Create(destFile)

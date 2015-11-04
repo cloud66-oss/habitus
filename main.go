@@ -18,9 +18,9 @@ var format = logging.MustStringFormatter(
 )
 
 var (
-	flagLevel string
-	VERSION         string = "dev"
-	BUILD_DATE      string = ""
+	flagLevel  string
+	VERSION    string = "dev"
+	BUILD_DATE string = ""
 )
 
 func init() {
@@ -50,7 +50,11 @@ func main() {
 	flag.StringVar(&config.DockerHost, "host", os.Getenv("DOCKER_HOST"), "Docker host link. Uses DOCKER_HOST if missing")
 	flag.StringVar(&config.DockerCert, "certs", os.Getenv("DOCKER_CERT_PATH"), "Docker cert folder. Uses DOCKER_CERT_PATH if missing")
 	flag.Var(&config.EnvVars, "env", "Environment variables to be used during build. If empty cxbuild uses parent process environment variables")
-	flag.BoolVar(&config.OverrideKeep, "keep-all", false, "Override keep flag for all steps. Used for degging each step")
+	flag.BoolVar(&config.OverrideKeep, "keep-all", false, "Override keep flag for all steps. Used for debugging each step")
+	flag.BoolVar(&config.NoSquash, "no-cleanup", false, "Skip cleanup commands for this run. Used for debugging")
+	flag.StringVar(&config.TempDir, "temp-dir", "", "Directory used to move artefacts. Defaults to system temp directory")
+	flag.BoolVar(&config.FroceRmImages, "force-rmi", false, "Force remove of unwanted images")
+	flag.BoolVar(&config.NoPruneRmImages, "noprune-rmi", false, "No pruning of unwanted images")
 
 	config.Logger = *log
 
