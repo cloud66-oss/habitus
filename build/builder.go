@@ -12,6 +12,7 @@ import (
 	"os/user"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/cloud66/cxbuild/configuration"
@@ -32,7 +33,6 @@ type Builder struct {
 	docker    docker.Client
 	auth      *docker.AuthConfigurations
 	builderId string // unique id for this builder session (used internally)
-	tempDir   string // temp folder used by this builder
 }
 
 // NewBuilder creates a new builder in a new session
@@ -42,14 +42,6 @@ func NewBuilder(manifest *Manifest, conf *configuration.Config) *Builder {
 	b.UniqueID = conf.UniqueID
 	b.Conf = conf
 	b.builderId = uuid.NewV4().String()
-
-	td, err := ioutil.TempDir(b.Conf.TempDir, "cxbuild-"+b.builderId+"-"+b.Conf.UniqueID)
-	if err != nil {
-		b.Conf.Logger.Fatal(err.Error())
-		return nil
-	}
-
-	b.tempDir = td
 
 	certPath := b.Conf.DockerCert
 	endpoint := b.Conf.DockerHost
@@ -72,13 +64,13 @@ func NewBuilder(manifest *Manifest, conf *configuration.Config) *Builder {
 	if _, err := os.Stat(filepath.Join(usr.HomeDir, ".dockercfg")); err == nil {
 		authStream, err := os.Open(filepath.Join(usr.HomeDir, ".dockercfg"))
 		if err != nil {
-			b.Conf.Logger.Fatal("Unable to read .dockerconf file")
+			b.Conf.Logger.Fatal("Unable to read .dockercfg file")
 		}
 		defer authStream.Close()
 
 		auth, err := docker.NewAuthConfigurations(authStream)
 		if err != nil {
-			b.Conf.Logger.Fatalf("Invalid .dockerconf: %s", err.Error())
+			b.Conf.Logger.Fatalf("Invalid .dockercfg: %s", err.Error())
 		}
 		b.auth = auth
 	}
@@ -301,10 +293,60 @@ func (b *Builder) BuildStep(step *Step) error {
 		}
 
 		if len(step.Artefacts) > 0 {
+			b.Conf.Logger.Notice("Starting container %s to fetch artefact permissions", container.ID)
+			startOpts := &docker.HostConfig{}
+			err := b.docker.StartContainer(container.ID, startOpts)
+			if err != nil {
+				return err
+			}
+
+			permMap := make(map[string]int)
+
+			for _, art := range step.Artefacts {
+				execOpts := docker.CreateExecOptions{
+					Container:    container.ID,
+					AttachStdin:  false,
+					AttachStdout: true,
+					AttachStderr: true,
+					Tty:          false,
+					Cmd:          []string{"stat", "--format='%a'", art.Source},
+				}
+				execObj, err := b.docker.CreateExec(execOpts)
+				if err != nil {
+					return err
+				}
+
+				buf := new(bytes.Buffer)
+				startExecOpts := docker.StartExecOptions{
+					OutputStream: buf,
+					ErrorStream:  os.Stderr,
+					RawTerminal:  false,
+					Detach:       false,
+				}
+
+				if err := b.docker.StartExec(execObj.ID, startExecOpts); err != nil {
+					b.Conf.Logger.Error("Failed to fetch artefact permissions for %s: %s", art.Source, err.Error())
+				}
+
+				permsString := strings.Replace(strings.Replace(buf.String(), "'", "", -1), "\n", "", -1)
+				perms, err := strconv.Atoi(permsString)
+				if err != nil {
+					b.Conf.Logger.Error("Failed to fetch artefact permissions for %s: %s", art.Source, err.Error())
+				}
+				permMap[art.Source] = perms
+				b.Conf.Logger.Debug("Permissions for %s is %d", art.Source, perms)
+			}
+
+			b.Conf.Logger.Debug("Stopping the container %s", container.ID)
+			err = b.docker.StopContainer(container.ID, 0)
+			if err != nil {
+				return err
+			}
+
 			b.Conf.Logger.Notice("Copying artefacts from %s", container.ID)
 
 			for _, art := range step.Artefacts {
-				err = b.copyToHost(&art, container.ID)
+				err = b.copyToHost(&art, container.ID, permMap)
 				if err != nil {
 					return err
 				}
@@ -389,11 +431,9 @@ func overwrite(mpath string) (*os.File, error) {
 	return f, nil
 }
 
-func (b *Builder) copyToHost(a *Artefact, container string) error {
-	// use the temp folder as base
-	dest := filepath.Join(b.tempDir, a.Dest)
+func (b *Builder) copyToHost(a *Artefact, container string, perms map[string]int) error {
 	// create the dest folder if not there
-	err := os.MkdirAll(dest, 0777)
+	err := os.MkdirAll(a.Dest, 0777)
 	if err != nil {
 		return err
 	}
@@ -410,6 +450,8 @@ func (b *Builder) copyToHost(a *Artefact, container string) error {
 		return err
 	}
 
+	destFile := path.Join(b.Conf.Workdir, a.Dest, filepath.Base(a.Source))
+
 	tr := tar.NewReader(&out)
 	for {
 		hdr, err := tr.Next()
@@ -423,7 +465,6 @@ func (b *Builder) copyToHost(a *Artefact, container string) error {
 
 		switch hdr.Typeflag {
 		case tar.TypeReg:
-			destFile := path.Join(dest, filepath.Base(a.Source))
 			b.Conf.Logger.Info("Copying from %s to %s", a.Source, destFile)
 
 			dest, err := os.Create(destFile)
@@ -438,6 +479,12 @@ func (b *Builder) copyToHost(a *Artefact, container string) error {
 		default:
 			return errors.New("Invalid header type")
 		}
+	}
+
+	b.Conf.Logger.Debug("Setting file permissions for %s to %d", destFile, perms[a.Source])
+	err = os.Chmod(destFile, os.FileMode(perms[a.Source]))
+	if err != nil {
+		return err
 	}
 
 	return nil

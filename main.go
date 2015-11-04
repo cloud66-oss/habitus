@@ -52,7 +52,6 @@ func main() {
 	flag.Var(&config.EnvVars, "env", "Environment variables to be used during build. If empty cxbuild uses parent process environment variables")
 	flag.BoolVar(&config.OverrideKeep, "keep-all", false, "Override keep flag for all steps. Used for debugging each step")
 	flag.BoolVar(&config.NoSquash, "no-cleanup", false, "Skip cleanup commands for this run. Used for debugging")
-	flag.StringVar(&config.TempDir, "temp-dir", "", "Directory used to move artefacts. Defaults to system temp directory")
 	flag.BoolVar(&config.FroceRmImages, "force-rmi", false, "Force remove of unwanted images")
 	flag.BoolVar(&config.NoPruneRmImages, "noprune-rmi", false, "No pruning of unwanted images")
 
@@ -93,6 +92,7 @@ func main() {
 
 	if c.IsPrivileged && os.Getenv("SUDO_USER") == "" {
 		log.Fatal("Some of the build steps require admin privileges (sudo). Please run with sudo")
+		log.Fatal("You might want to use --certs=$DOCKER_CERT_PATH --host=$DOCKER_HOST params to make sure all environment variables are available to the process")
 		os.Exit(1)
 	}
 
