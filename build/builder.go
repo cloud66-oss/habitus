@@ -118,6 +118,7 @@ func (b *Builder) StartBuild(startStep string) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -139,6 +140,7 @@ func (b *Builder) BuildStep(step *Step) error {
 	}
 
 	// call Docker to build the Dockerfile (from the parsed file)
+	b.Conf.Logger.Debug("Building the image from %s", filepath.Base(b.uniqueDockerfile(step)))
 	opts := docker.BuildImageOptions{
 		Name:                b.uniqueStepName(step),
 		Dockerfile:          filepath.Base(b.uniqueDockerfile(step)),
@@ -412,6 +414,7 @@ func (b *Builder) replaceFromField(step *Step) error {
 	}
 
 	// did it have any effect?
+	b.Conf.Logger.Debug("Writing the new Dockerfile into %s", step.Dockerfile+".generated")
 	err = ioutil.WriteFile(b.uniqueDockerfile(step), []byte(dumpDockerfile(node)), 0644)
 	if err != nil {
 		return err
@@ -538,5 +541,5 @@ func dumpDockerfile(node *parser.Node) string {
 }
 
 func (b *Builder) uniqueDockerfile(step *Step) string {
-	return filepath.Join(b.Conf.Workdir, b.uniqueStepName(step))
+	return filepath.Join(b.Conf.Workdir, step.Dockerfile) + ".generated"
 }

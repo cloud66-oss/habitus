@@ -91,8 +91,7 @@ func main() {
 	}
 
 	if c.IsPrivileged && os.Getenv("SUDO_USER") == "" {
-		log.Fatal("Some of the build steps require admin privileges (sudo). Please run with sudo")
-		log.Fatal("You might want to use --certs=$DOCKER_CERT_PATH --host=$DOCKER_HOST params to make sure all environment variables are available to the process")
+		log.Fatal("Some of the build steps require admin privileges (sudo). Please run with sudo\nYou might want to use --certs=$DOCKER_CERT_PATH --host=$DOCKER_HOST params to make sure all environment variables are available to the process")
 		os.Exit(1)
 	}
 
