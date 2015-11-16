@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cloud66/cxbuild/configuration"
+	"bitbucket.org/cloud66/cxbuild/configuration"
 	"github.com/docker/docker/pkg/units"
 )
 

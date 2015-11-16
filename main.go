@@ -6,8 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/cloud66/cxbuild/build"
-	"github.com/cloud66/cxbuild/configuration"
+	"bitbucket.org/cloud66/cxbuild/build"
+	"bitbucket.org/cloud66/cxbuild/configuration"
 	"github.com/op/go-logging"
 
 	"github.com/bugsnag/bugsnag-go"

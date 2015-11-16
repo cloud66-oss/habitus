@@ -10,7 +10,7 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/cloud66/cxbuild/configuration"
+	"bitbucket.org/cloud66/cxbuild/configuration"
 )
 
 var (

@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/cloud66/cxbuild",
+	"ImportPath": "bitbucket.org/cloud66/cxbuild",
 	"GoVersion": "go1.5.1",
 	"Deps": [
 		{
