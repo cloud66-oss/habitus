@@ -31,7 +31,6 @@ type Step struct {
 	Order      int
 	Name       string
 	Dockerfile string
-	Keep       bool
 	Artefacts  []Artefact
 	Manifest   Manifest
 	Cleanup    *Cleanup
@@ -51,7 +50,6 @@ type cleanup struct {
 type step struct {
 	Name       string
 	Dockerfile string
-	Keep       bool
 	Artefacts  []string
 	Cleanup    *cleanup
 }
@@ -95,7 +93,6 @@ func (b *build) convertToBuild() (*Manifest, error) {
 		convertedStep.Dockerfile = s.Dockerfile
 		convertedStep.Name = s.Name
 		convertedStep.Order = idx
-		convertedStep.Keep = s.Keep
 		convertedStep.Artefacts = []Artefact{}
 		if s.Cleanup != nil && !b.Config.NoSquash {
 			convertedStep.Cleanup = &Cleanup{Commands: s.Cleanup.Commands}

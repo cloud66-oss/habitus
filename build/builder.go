@@ -105,12 +105,12 @@ func (b *Builder) StartBuild(startStep string) error {
 		}
 	}
 
+	if b.Conf.KeepSteps {
+		return nil
+	}
+
 	// Clear after yourself: images, containers, etc (optional for premium users)
 	for _, s := range steps {
-		if s.Keep || b.Conf.OverrideKeep {
-			continue
-		}
-
 		b.Conf.Logger.Debug("Removing unwanted image %s", b.uniqueStepName(&s))
 		rmiOptions := docker.RemoveImageOptions{Force: b.Conf.FroceRmImages, NoPrune: b.Conf.NoPruneRmImages}
 		err := b.docker.RemoveImageExtended(b.uniqueStepName(&s), rmiOptions)

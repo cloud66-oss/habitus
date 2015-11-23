@@ -3,7 +3,6 @@ steps:
   - step_one:
     name: gobase
     dockerfile: Dockerfile.base
-    keep: false
     artefacts:
       - /go/src/go-service/go-service
     cleanup:
@@ -15,4 +14,3 @@ steps:
   - step_two:
     name: steptwo
     dockerfile: Dockerfile.main
-    keep: true

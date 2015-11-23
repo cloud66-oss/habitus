@@ -49,7 +49,7 @@ type Router struct {
 	// See Router.StrictSlash(). This defines the flag for new routes.
 	strictSlash bool
 	// If true, do not clear the request context after handling the request
-	KeepContext bool
+	KeepStep bool
 }
 
 // Match matches registered routes against the request.

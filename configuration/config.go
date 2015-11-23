@@ -28,7 +28,7 @@ type Config struct {
 	DockerHost          string
 	DockerCert          string
 	EnvVars             EnvVarsArray
-	OverrideKeep        bool
+	KeepSteps           bool
 	NoSquash            bool
 	NoPruneRmImages     bool
 	FroceRmImages       bool
