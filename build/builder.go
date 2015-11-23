@@ -122,12 +122,22 @@ func (b *Builder) StartBuild(startStep string) error {
 	return nil
 }
 
+// provides a name for the image
+// it always adds the UID (if provided) to the end of the name
+// so it either be a tag or part of the provided tag
 func (b *Builder) uniqueStepName(step *Step) string {
 	if b.UniqueID == "" {
 		return step.Name
 	}
 
-	return strings.ToLower(fmt.Sprintf("%s.%s", b.UniqueID, step.Name))
+	newName := step.Name
+	if strings.Contains(step.Name, ":") {
+		newName = step.Name + "-" + b.UniqueID
+	} else {
+		newName = step.Name + ":" + b.UniqueID
+	}
+
+	return strings.ToLower(newName)
 }
 
 // BuildStep builds a single step
