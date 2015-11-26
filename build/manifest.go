@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"bitbucket.org/cloud66/cxbuild/configuration"
+	"github.com/cloud66/habitus/configuration"
 
 	"gopkg.in/yaml.v2"
 )

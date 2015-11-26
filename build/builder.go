@@ -15,8 +15,8 @@ import (
 	"strconv"
 	"strings"
 
-	"bitbucket.org/cloud66/cxbuild/configuration"
-	"bitbucket.org/cloud66/cxbuild/squash"
+	"github.com/cloud66/habitus/configuration"
+	"github.com/cloud66/habitus/squash"
 	"github.com/dchest/uniuri"
 	"github.com/docker/docker/builder/dockerfile/parser"
 	"github.com/fsouza/go-dockerclient"
