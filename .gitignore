@@ -22,7 +22,6 @@ _testmain.go
 *.exe
 *.test
 *.prof
-cxbuild
 localhost.crt
 localhost.key
 habitus
