@@ -110,7 +110,12 @@ func (b *Builder) StartBuild(startStep string) error {
 	}
 
 	// Clear after yourself: images, containers, etc (optional for premium users)
-	for _, s := range steps {
+	// except last step
+	last := len(steps) - 1
+	for i, s := range steps {
+		if i == last {
+			break
+		}
 		b.Conf.Logger.Debug("Removing unwanted image %s", b.uniqueStepName(&s))
 		rmiOptions := docker.RemoveImageOptions{Force: b.Conf.FroceRmImages, NoPrune: b.Conf.NoPruneRmImages}
 		err := b.docker.RemoveImageExtended(b.uniqueStepName(&s), rmiOptions)
@@ -126,17 +131,13 @@ func (b *Builder) StartBuild(startStep string) error {
 // it always adds the UID (if provided) to the end of the name
 // so it either be a tag or part of the provided tag
 func (b *Builder) uniqueStepName(step *Step) string {
+	newName := ""
 	if b.UniqueID == "" {
-		return step.Name
-	}
-
-	newName := step.Name
-	if strings.Contains(step.Name, ":") {
-		newName = step.Name + "-" + b.UniqueID
+		newName = step.Name
 	} else {
-		newName = step.Name + ":" + b.UniqueID
+		newName = step.Name + "-" + b.UniqueID
 	}
-
+	
 	return strings.ToLower(newName)
 }
 
