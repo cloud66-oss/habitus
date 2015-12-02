@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"regexp"
 
 	"github.com/cloud66/habitus/configuration"
 	"github.com/cloud66/habitus/squash"
@@ -131,13 +132,17 @@ func (b *Builder) StartBuild(startStep string) error {
 // it always adds the UID (if provided) to the end of the name
 // so it either be a tag or part of the provided tag
 func (b *Builder) uniqueStepName(step *Step) string {
-	newName := ""
 	if b.UniqueID == "" {
-		newName = step.Name
-	} else {
-		newName = step.Name + "-" + b.UniqueID
+		return step.Name
 	}
-	
+
+	newName := step.Name
+	if strings.Contains(step.Name, ":") {
+		newName = step.Name + "-" + b.UniqueID
+	} else {
+		newName = step.Name + ":" + b.UniqueID
+	}
+
 	return strings.ToLower(newName)
 }
 
@@ -514,8 +519,10 @@ func (b *Builder) createContainer(step *Step) (*docker.Container, error) {
 		Tty:          true,
 	}
 
+	r, _ := regexp.Compile("/?[^a-zA-Z0-9_-]+")
+	containerName := r.ReplaceAllString(b.uniqueStepName(step), "-") + "." + uniuri.New()
 	opts := docker.CreateContainerOptions{
-		Name:   b.uniqueStepName(step) + "." + uniuri.New(),
+		Name:   containerName,
 		Config: &config,
 	}
 	container, err := b.docker.CreateContainer(opts)
