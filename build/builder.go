@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"regexp"
 
 	"github.com/cloud66/habitus/configuration"
 	"github.com/cloud66/habitus/squash"
@@ -110,7 +111,8 @@ func (b *Builder) StartBuild(startStep string) error {
 	}
 
 	// Clear after yourself: images, containers, etc (optional for premium users)
-	for _, s := range steps {
+	// except last step
+	for _, s := range steps[:len(steps)-1] {
 		b.Conf.Logger.Debug("Removing unwanted image %s", b.uniqueStepName(&s))
 		rmiOptions := docker.RemoveImageOptions{Force: b.Conf.FroceRmImages, NoPrune: b.Conf.NoPruneRmImages}
 		err := b.docker.RemoveImageExtended(b.uniqueStepName(&s), rmiOptions)
@@ -513,8 +515,10 @@ func (b *Builder) createContainer(step *Step) (*docker.Container, error) {
 		Tty:          true,
 	}
 
+	r, _ := regexp.Compile("/?[^a-zA-Z0-9_-]+")
+	containerName := r.ReplaceAllString(b.uniqueStepName(step), "-") + "." + uniuri.New()
 	opts := docker.CreateContainerOptions{
-		Name:   b.uniqueStepName(step) + "." + uniuri.New(),
+		Name:   containerName,
 		Config: &config,
 	}
 	container, err := b.docker.CreateContainer(opts)
