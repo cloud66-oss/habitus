@@ -9,12 +9,12 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"os/user"
 	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"regexp"
+	"net/url"
 
 	"github.com/cloud66/habitus/configuration"
 	"github.com/cloud66/habitus/squash"
@@ -44,12 +44,23 @@ func NewBuilder(manifest *Manifest, conf *configuration.Config) *Builder {
 	b.Conf = conf
 	b.builderId = uuid.NewV4().String()
 
-	certPath := b.Conf.DockerCert
-	endpoint := b.Conf.DockerHost
-	ca := path.Join(certPath, "ca.pem")
-	cert := path.Join(certPath, "cert.pem")
-	key := path.Join(certPath, "key.pem")
-	client, err := docker.NewTLSClient(endpoint, cert, key, ca)
+	endpoint, err := url.Parse(b.Conf.DockerHost)
+	if err != nil {
+		b.Conf.Logger.Fatalf("Invalid host: %s", err.Error())
+		return nil
+	}
+
+	var client *docker.Client
+	if endpoint.Scheme == "unix" {
+		client, err = docker.NewClient(endpoint.String())
+	} else {
+		certPath := b.Conf.DockerCert
+		ca := path.Join(certPath, "ca.pem")
+		cert := path.Join(certPath, "cert.pem")
+		key := path.Join(certPath, "key.pem")
+		client, err = docker.NewTLSClient(endpoint.String(), cert, key, ca)
+	}
+
 	if err != nil {
 		b.Conf.Logger.Fatal(err.Error())
 		return nil
@@ -57,13 +68,13 @@ func NewBuilder(manifest *Manifest, conf *configuration.Config) *Builder {
 
 	b.docker = *client
 
-	usr, err := user.Current()
-	if err != nil {
-		b.Conf.Logger.Fatalf("Failed to find the current user: %s", err.Error())
+	homeDir := os.Getenv("HOME")
+	if homeDir == "" {
+		b.Conf.Logger.Fatalf("Failed to find the current home")		
 	}
 
-	if _, err := os.Stat(filepath.Join(usr.HomeDir, ".dockercfg")); err == nil {
-		authStream, err := os.Open(filepath.Join(usr.HomeDir, ".dockercfg"))
+	if _, err := os.Stat(filepath.Join(homeDir, ".dockercfg")); err == nil {
+		authStream, err := os.Open(filepath.Join(homeDir, ".dockercfg"))
 		if err != nil {
 			b.Conf.Logger.Fatal("Unable to read .dockercfg file")
 		}
