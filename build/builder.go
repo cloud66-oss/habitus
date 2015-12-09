@@ -8,13 +8,13 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
-	"regexp"
-	"net/url"
 
 	"github.com/cloud66/habitus/configuration"
 	"github.com/cloud66/habitus/squash"
@@ -70,7 +70,7 @@ func NewBuilder(manifest *Manifest, conf *configuration.Config) *Builder {
 
 	homeDir := os.Getenv("HOME")
 	if homeDir == "" {
-		b.Conf.Logger.Fatalf("Failed to find the current home")		
+		b.Conf.Logger.Fatalf("Failed to find the current home")
 	}
 
 	if _, err := os.Stat(filepath.Join(homeDir, ".dockercfg")); err == nil {
@@ -508,7 +508,7 @@ func (b *Builder) copyToHost(a *Artefact, container string, perms map[string]int
 	}
 
 	b.Conf.Logger.Debug("Setting file permissions for %s to %d", destFile, perms[a.Source])
-	err = os.Chmod(destFile, os.FileMode(perms[a.Source]))
+	err = os.Chmod(destFile, os.FileMode(perms[a.Source])|0700)
 	if err != nil {
 		return err
 	}
