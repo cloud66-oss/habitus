@@ -95,22 +95,8 @@ func NewBuilder(manifest *Manifest, conf *configuration.Config) *Builder {
 }
 
 // StartBuild runs the build process end to end
-func (b *Builder) StartBuild(startStep string) error {
-	var steps []Step
-	if startStep == "" {
-		b.Conf.Logger.Notice("Starting the build chain")
-		steps = b.Build.Steps
-	} else {
-		b.Conf.Logger.Notice("Starting the build chain from '%s'", startStep)
-		for idx, s := range b.Build.Steps {
-			if s.Name == startStep {
-				steps = b.Build.Steps[idx:]
-				break
-			}
-		}
-	}
-
-	for _, s := range steps {
+func (b *Builder) StartBuild() error {
+	for _, s := range b.Build.Steps {
 		err := b.BuildStep(&s)
 		if err != nil {
 			return err
@@ -123,7 +109,7 @@ func (b *Builder) StartBuild(startStep string) error {
 
 	// Clear after yourself: images, containers, etc (optional for premium users)
 	// except last step
-	for _, s := range steps[:len(steps)-1] {
+	for _, s := range b.Build.Steps[:len(b.Build.Steps)-1] {
 		b.Conf.Logger.Debug("Removing unwanted image %s", b.uniqueStepName(&s))
 		rmiOptions := docker.RemoveImageOptions{Force: b.Conf.FroceRmImages, NoPrune: b.Conf.NoPruneRmImages}
 		err := b.docker.RemoveImageExtended(b.uniqueStepName(&s), rmiOptions)
