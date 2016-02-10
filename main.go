@@ -44,7 +44,6 @@ func main() {
 	flag.BoolVar(&config.SuppressOutput, "suppress", false, "Suppress build output")
 	flag.BoolVar(&config.RmTmpContainers, "rm", true, "Remove intermediate containers")
 	flag.BoolVar(&config.ForceRmTmpContainer, "force-rm", false, "Force remove intermediate containers")
-	flag.StringVar(&config.StartStep, "s", "", "Starting step for the build")
 	flag.StringVar(&config.UniqueID, "uid", "", "Unique ID for the build. Used only for multi-tenanted build environments")
 	flag.StringVar(&flagLevel, "level", "debug", "Log level: debug, info, notice, warning, error and critical")
 	flag.StringVar(&config.DockerHost, "host", os.Getenv("DOCKER_HOST"), "Docker host link. Uses DOCKER_HOST if missing")
@@ -96,7 +95,7 @@ func main() {
 	}
 
 	b := build.NewBuilder(c, &config)
-	err = b.StartBuild(config.StartStep)
+	err = b.StartBuild()
 	if err != nil {
 		log.Error("Error during build %s", err.Error())
 	}
