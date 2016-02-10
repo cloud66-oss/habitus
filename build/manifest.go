@@ -40,6 +40,8 @@ type Step struct {
 type Manifest struct {
 	Steps        []Step
 	IsPrivileged bool
+
+	buildLevels [][]Step
 }
 
 type cleanup struct {
@@ -163,18 +165,29 @@ func (b *build) convertToBuild() (*Manifest, error) {
 	}
 
 	// build the dependency tree
-	_, err := r.serviceOrder(r.Steps)
+	bl, err := r.serviceOrder(r.Steps)
 	if err != nil {
 		return nil, err
 	}
+	r.buildLevels = bl
 
 	return &r, nil
+}
+
+func (m *Manifest) getStepsByLevel(level int) ([]Step, error) {
+	if level >= len(m.buildLevels) {
+		return nil, errors.New("level not available")
+	}
+
+	return m.buildLevels[level], nil
 }
 
 // takes in a list of steps and returns an array of steps ordered by their dependency order
 // result[0] will be an array of all steps with no dependency
 // result[1] will be an array of steps depending on one or more of result[0] steps and so on
-func (m *Manifest) serviceOrder(list []Step) ([][]Step, error) {
+func (m *Manifest) serviceOrder(mainList []Step) ([][]Step, error) {
+	list := append([]Step(nil), mainList...)
+
 	if len(list) == 0 {
 		return [][]Step{}, nil
 	}
