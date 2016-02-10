@@ -15,6 +15,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/cloud66/habitus/configuration"
 	"github.com/cloud66/habitus/squash"
@@ -34,6 +35,7 @@ type Builder struct {
 	docker    docker.Client
 	auth      *docker.AuthConfigurations
 	builderId string // unique id for this builder session (used internally)
+	wg        sync.WaitGroup
 }
 
 // NewBuilder creates a new builder in a new session
@@ -96,11 +98,26 @@ func NewBuilder(manifest *Manifest, conf *configuration.Config) *Builder {
 
 // StartBuild runs the build process end to end
 func (b *Builder) StartBuild() error {
+	b.Conf.Logger.Debug("Building %d steps", len(b.Build.Steps))
 	for _, s := range b.Build.Steps {
-		err := b.BuildStep(&s)
-		if err != nil {
-			return err
+		b.Conf.Logger.Debug("Step %s", s.Name)
+	}
+
+	for _, levels := range b.Build.buildLevels {
+		for _, s := range levels {
+			b.wg.Add(1)
+			go func(st Step) {
+				b.Conf.Logger.Debug("Parallel build for %s", st.Name)
+				defer b.wg.Done()
+
+				err := b.BuildStep(&st)
+				if err != nil {
+					b.Conf.Logger.Fatalf("Build for step %s failed due to %s", st.Name, err.Error())
+				}
+			}(s)
 		}
+
+		b.wg.Wait()
 	}
 
 	if b.Conf.KeepSteps {
