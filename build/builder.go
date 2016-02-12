@@ -189,7 +189,7 @@ func (b *Builder) BuildStep(step *Step) error {
 
 	// if there are any artefacts to be picked up, create a container and copy them over
 	// we also need a container if there are cleanup commands
-	if len(step.Artefacts) > 0 || len(step.Cleanup.Commands) > 0 {
+	if len(step.Artefacts) > 0 || len(step.Cleanup.Commands) > 0 || step.Command != "" {
 		b.Conf.Logger.Notice("Building container based on the image")
 
 		// create a container
@@ -378,6 +378,47 @@ func (b *Builder) BuildStep(step *Step) error {
 				if err != nil {
 					return err
 				}
+			}
+		}
+
+		// any commands to run?
+		if step.Command != "" {
+			b.Conf.Logger.Notice("Starting container %s to run commands", container.ID)
+			startOpts := &docker.HostConfig{}
+			err := b.docker.StartContainer(container.ID, startOpts)
+			if err != nil {
+				return err
+			}
+
+			execOpts := docker.CreateExecOptions{
+				Container:    container.ID,
+				AttachStdin:  false,
+				AttachStdout: true,
+				AttachStderr: true,
+				Tty:          false,
+				Cmd:          strings.Split(step.Command, " "),
+			}
+			execObj, err := b.docker.CreateExec(execOpts)
+			if err != nil {
+				return err
+			}
+
+			buf := new(bytes.Buffer)
+			startExecOpts := docker.StartExecOptions{
+				OutputStream: buf,
+				ErrorStream:  os.Stderr,
+				RawTerminal:  false,
+				Detach:       false,
+			}
+
+			if err := b.docker.StartExec(execObj.ID, startExecOpts); err != nil {
+				b.Conf.Logger.Error("Failed to execute command '%s' due to %s", step.Command, err.Error())
+			}
+
+			b.Conf.Logger.Debug("Stopping the container %s", container.ID)
+			err = b.docker.StopContainer(container.ID, 0)
+			if err != nil {
+				return err
 			}
 		}
 

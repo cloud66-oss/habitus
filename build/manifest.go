@@ -34,6 +34,7 @@ type Step struct {
 	Manifest   Manifest
 	Cleanup    *Cleanup
 	DependsOn  []*Step
+	Command    string
 }
 
 // Manifest Holds the whole build process
@@ -55,6 +56,7 @@ type step struct {
 	Artefacts  []string
 	Cleanup    *cleanup
 	DependsOn  []string
+	Command    string
 }
 
 // This is loaded from the build.yml file
@@ -108,6 +110,7 @@ func (b *build) convertToBuild() (*Manifest, error) {
 		convertedStep.Dockerfile = s.Dockerfile
 		convertedStep.Name = s.Name
 		convertedStep.Artefacts = []Artefact{}
+		convertedStep.Command = s.Command
 		if s.Cleanup != nil && !b.Config.NoSquash {
 			convertedStep.Cleanup = &Cleanup{Commands: s.Cleanup.Commands}
 			r.IsPrivileged = true
