@@ -2,7 +2,7 @@
 <html lang="en-us">
   <head>
     <meta charset="UTF-8">
-    <title>Habitus by Cloud 66</title>
+    <title>Habitus | Docker Build Flow Tool</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
@@ -42,20 +42,29 @@ steps:
   - deployment:
     name: ironmountain
     dockerfile: Dockerfile.deployment
+    dependson:
+      - builder
+  - uploader:
+    name: uploader
+    dockerfile: Dockerfile.uploader
+    dependson:
+      - ironmountain
+    command: s3cmd --access_key=_env(ACCESS_KEY) --secret_key=_env(SECRET_KEY) put /app/iron-mountain s3://uploads.aws.com
   </code>
 </pre>
 
 <p>Build files can be made up of multiple steps. Each step is independent of the other ones and downstream steps can use upstream ones as source (in <code>FROM</code> command).</p>
-<p>In the example above, there are two steps: <code>builder</code> and <code>deployment</code>. All steps work out of the same working directory. <code>dockerfile</code> states which Dockerfile is used to build this step.</p>
+<p>In the example above, there are three steps: <code>builder</code>, <code>deployment</code> and <code>uploader</code>. All steps work out of the same working directory. <code>dockerfile</code> states which Dockerfile is used to build this step.</p>
 
 <p>Here is a list of all step elements:</p>
 
 <ul>
-<li><code>order (optional)</code>: Order of the step. This is assigned to the step if missing based on the order in the yml file.</li>
 <li><code>name:</code> Name of the generated image</li>
 <li><code>dockerfile:</code> Dockerfile used to build the step</li>
 <li><code>artefacts:</code> List of all files to be copied out of the image once it's built. See below</li>
 <li><code>cleanup:</code> List of all cleanup steps to run on the image once the step is finished. See below</li>
+<li><code>dependson:</code>Lists all the steps this step depends on (and should be built prior to this step's build)</li>
+<li><code>command:</code>A command that will run in the running container after it's built</li>
 </ul>
 
 <h4>Artefacts</h4>
@@ -77,6 +86,15 @@ steps:
 </p>
 
 <p>Artefacts are copied from the container and can be used with <code>ADD</code> or <code>COPY</code> commands in downstream steps. Habitus copies artefact file permissions as well.</p>
+
+<p>Here is an example that uses an artefact generated in step <code>builder</code></p>
+
+<pre>
+  <code>
+    FROM ubuntu
+    ADD ./iron-mountain /app/iron-mountain
+  </code>
+</pre>
 
 <h4>Cleanup</h4>
 
@@ -100,8 +118,16 @@ cleanup:
 <p>Habitus allows dovetailing (sequencing) of images from different steps. This means a step can use the image built by the previous step as the source in its Dockerfile <code>FROM</code> command. This is done automatically if <code>FROM</code> command refers to an image name used by a previous step.</p>
 <p>Habitus automatically parses the <code>FROM</code> image name and replaces it with the correct name when it is used in multi-tenanted setup. This enables multiple builds of the same build file to run in parallel with different session UIDs (see below).</p>
 
+<p>Please note if you are using step A's result in step B's <code>FROM</code> statement, you need to make sure A is listed under <code>dependson</code> attribute of B. Otherwise both A and B will be built in parallel.</p>
+
+<h4>Step dependencies</h4>
+
+<p>Steps can depend on each other. This can be specified by the <code>dependson</code> attribute.</p>
+
+<p>Steps can depend on one or more of the other steps. This will determine the build order for steps. Independent steps are built in parallel and according to the build order defined by dependencies.</p>
+
 <h4>Environment variables</h4>
-<p>Environment variables can be used in the build file with the _env(VAR) format:</p>
+<p>Environment variables can be used in the build file with the <code>_env(VAR)</code> format:</p>
 
 <pre>
   <code>
@@ -113,7 +139,32 @@ artefacts:
 
 <p>This will be replaced before the build file is fed into the build engine. By default Habitus inherits all environment variables of its parent process. This can be overridden by passing environment variables into Habitus explicitly through the env command parameter:</p>
 
-<p><code>$ Habitus -env SERVICE_NAME=abc -env RAILS_ENV=production</code></p>
+<p><kbd>$ habitus -env SERVICE_NAME=abc -env RAILS_ENV=production</kbd></p>
+
+<p>In the example above, you can pass in AWS S3 key and secret like this:</p>
+
+<p><kbd>$ habitus -env ACCESS_KEY=$ACCESS_KEY -env SECRET_KEY=$SECRET_KEY</kbd></p>
+
+<h4>Running commands</h4>
+
+<p>Habitus allows you to run an arbitary command inside of a built container. This can be useful in many cases like uploading the build artefacts to webserver, resetting your exception handling service after each build or starting your release process.</p>
+
+<p><code>command</code> attribute is optional. If present, the image is built and a container is started based on it to run the command.</p>
+
+<p><code>command</code> runs after the build, cleanup and copying of the artefacts are done.</p>
+
+<p>An example to upload a build artefact to S3 can be like this</p>
+
+<pre>
+  <code>
+    FROM cloud66/uploader
+    ADD ./iron-mountain /app/iron-mountain
+  </code>
+</pre>
+
+<p><code><a href="https://hub.docker.com/r/cloud66/uploader/">cloud66/uploader</a></code> is a simple Docker image that has <a href="http://s3tools.org/s3cmd">S3CMD</a> installed on it. </p>
+
+<p>The Dockerfile here is a simple one that starts from <code>cloud66/uploader</code> and adds one of the build artefacts to the image so it can be uploaded to S3.</p>
 
 <h4>Command line parameters</h4>
 <p>Habitus accepts the following command line parameters:</p>
@@ -125,7 +176,6 @@ artefacts:
 <li><code>suppress</code>: Suppress docker build output.</li>
 <li><code>rm</code>: Remove intermediate built images.</li>
 <li><code>force-rm</code>: Forcefully remove intermediate images.</li>
-<li><code>s</code>: Start step name. It allows starting a build from a middle step. Doesn't work with image sequencing. Defaults to the first step.</li>
 <li><code>uid</code>: A unique ID used for a build session to allow multi-tenancy of Habitus</li>
 <li><code>level</code>: Logging level. Acceptable values: <code>debug</code>, <code>info</code>, <code>notice</code>, <code>warning</code>, <code>error</code> and critical. Defaults to <code>debug</code></li>
 <li><code>host</code>: Address for Docker daemon to run the build. Defaults to the value of <code>$DOCKER_HOST</code>.</li>
@@ -141,7 +191,7 @@ artefacts:
 
 <p>Habitus requires running in privileged more (sudo) so it can run the squash method (keeping file permissions across images). It also requires the following environment variables: <code>DOCKER_HOST</code> and <code>DOCKER_CERT_PATH</code>. These are usually available when Docker is running on a machine, but might not be available in sudo mode. To fix this, you can pass them into the app with commandline params:</p>
 
-<p><code>$ sudo Habitus --host $DOCKER_HOST --certs $DOCKER_CERT_PATH</code></p>
+<p><kbd>$ sudo habitus --host $DOCKER_HOST --certs $DOCKER_CERT_PATH</kbd></p>
 
 <h4>Dependencies</h4>
 
