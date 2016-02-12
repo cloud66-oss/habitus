@@ -14,3 +14,5 @@ steps:
   - step_two:
     name: steptwo
     dockerfile: Dockerfile.main
+    dependson:
+      - gobase

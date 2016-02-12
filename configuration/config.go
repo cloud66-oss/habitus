@@ -18,7 +18,6 @@ type EnvVarsArray []EnvVarItem
 type Config struct {
 	Buildfile           string
 	Workdir             string
-	StartStep           string
 	NoCache             bool
 	SuppressOutput      bool
 	RmTmpContainers     bool

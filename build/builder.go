@@ -15,6 +15,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/cloud66/habitus/configuration"
 	"github.com/cloud66/habitus/squash"
@@ -34,6 +35,7 @@ type Builder struct {
 	docker    docker.Client
 	auth      *docker.AuthConfigurations
 	builderId string // unique id for this builder session (used internally)
+	wg        sync.WaitGroup
 }
 
 // NewBuilder creates a new builder in a new session
@@ -95,26 +97,27 @@ func NewBuilder(manifest *Manifest, conf *configuration.Config) *Builder {
 }
 
 // StartBuild runs the build process end to end
-func (b *Builder) StartBuild(startStep string) error {
-	var steps []Step
-	if startStep == "" {
-		b.Conf.Logger.Notice("Starting the build chain")
-		steps = b.Build.Steps
-	} else {
-		b.Conf.Logger.Notice("Starting the build chain from '%s'", startStep)
-		for idx, s := range b.Build.Steps {
-			if s.Name == startStep {
-				steps = b.Build.Steps[idx:]
-				break
-			}
-		}
+func (b *Builder) StartBuild() error {
+	b.Conf.Logger.Debug("Building %d steps", len(b.Build.Steps))
+	for _, s := range b.Build.Steps {
+		b.Conf.Logger.Debug("Step %s", s.Name)
 	}
 
-	for _, s := range steps {
-		err := b.BuildStep(&s)
-		if err != nil {
-			return err
+	for _, levels := range b.Build.buildLevels {
+		for _, s := range levels {
+			b.wg.Add(1)
+			go func(st Step) {
+				b.Conf.Logger.Debug("Parallel build for %s", st.Name)
+				defer b.wg.Done()
+
+				err := b.BuildStep(&st)
+				if err != nil {
+					b.Conf.Logger.Fatalf("Build for step %s failed due to %s", st.Name, err.Error())
+				}
+			}(s)
 		}
+
+		b.wg.Wait()
 	}
 
 	if b.Conf.KeepSteps {
@@ -123,7 +126,7 @@ func (b *Builder) StartBuild(startStep string) error {
 
 	// Clear after yourself: images, containers, etc (optional for premium users)
 	// except last step
-	for _, s := range steps[:len(steps)-1] {
+	for _, s := range b.Build.Steps[:len(b.Build.Steps)-1] {
 		b.Conf.Logger.Debug("Removing unwanted image %s", b.uniqueStepName(&s))
 		rmiOptions := docker.RemoveImageOptions{Force: b.Conf.FroceRmImages, NoPrune: b.Conf.NoPruneRmImages}
 		err := b.docker.RemoveImageExtended(b.uniqueStepName(&s), rmiOptions)
@@ -186,7 +189,7 @@ func (b *Builder) BuildStep(step *Step) error {
 
 	// if there are any artefacts to be picked up, create a container and copy them over
 	// we also need a container if there are cleanup commands
-	if len(step.Artefacts) > 0 || len(step.Cleanup.Commands) > 0 {
+	if len(step.Artefacts) > 0 || len(step.Cleanup.Commands) > 0 || step.Command != "" {
 		b.Conf.Logger.Notice("Building container based on the image")
 
 		// create a container
@@ -375,6 +378,47 @@ func (b *Builder) BuildStep(step *Step) error {
 				if err != nil {
 					return err
 				}
+			}
+		}
+
+		// any commands to run?
+		if step.Command != "" {
+			b.Conf.Logger.Notice("Starting container %s to run commands", container.ID)
+			startOpts := &docker.HostConfig{}
+			err := b.docker.StartContainer(container.ID, startOpts)
+			if err != nil {
+				return err
+			}
+
+			execOpts := docker.CreateExecOptions{
+				Container:    container.ID,
+				AttachStdin:  false,
+				AttachStdout: true,
+				AttachStderr: true,
+				Tty:          false,
+				Cmd:          strings.Split(step.Command, " "),
+			}
+			execObj, err := b.docker.CreateExec(execOpts)
+			if err != nil {
+				return err
+			}
+
+			buf := new(bytes.Buffer)
+			startExecOpts := docker.StartExecOptions{
+				OutputStream: buf,
+				ErrorStream:  os.Stderr,
+				RawTerminal:  false,
+				Detach:       false,
+			}
+
+			if err := b.docker.StartExec(execObj.ID, startExecOpts); err != nil {
+				b.Conf.Logger.Error("Failed to execute command '%s' due to %s", step.Command, err.Error())
+			}
+
+			b.Conf.Logger.Debug("Stopping the container %s", container.ID)
+			err = b.docker.StopContainer(container.ID, 0)
+			if err != nil {
+				return err
 			}
 		}
 
