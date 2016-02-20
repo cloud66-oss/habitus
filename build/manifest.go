@@ -46,31 +46,37 @@ type Manifest struct {
 }
 
 type cleanup struct {
-	Commands []string
+	Commands []string `yaml:"commands"`
 }
 
 // Private structs. They are used to load from yaml
 type step struct {
-	Name       string
-	Dockerfile string
-	Artefacts  []string
-	Cleanup    *cleanup
-	DependsOn  []string
-	Command    string
+	Name       string   `yaml:"name"`
+	Dockerfile string   `yaml:"dockerfile"`
+	Artefacts  []string `yaml:"artifacts"`
+	Cleanup    *cleanup `yaml:"cleanup"`
+	DependsOn  []string `yaml:"depends_on"`
+	Command    string   `yaml:"command"`
 }
 
 // This is loaded from the build.yml file
 type build struct {
-	Workdir string
-	Steps   []step
-	Config  *configuration.Config
+	Version string `yaml:"version"`
+	Workdir string `yaml:"work_dir"`
+	Steps   []step `yaml:"steps"`
+}
+
+// Habitus build namespace
+type namespace struct {
+	BuildConfig build `yaml:"build"`
+	Config      *configuration.Config
 }
 
 // LoadBuildFromFile loads Build from a yaml file
 func LoadBuildFromFile(config *configuration.Config) (*Manifest, error) {
 	config.Logger.Notice("Using '%s' as build file", config.Buildfile)
 
-	t := build{Config: config}
+	n := namespace{Config: config}
 
 	data, err := ioutil.ReadFile(config.Buildfile)
 	if err != nil {
@@ -79,12 +85,18 @@ func LoadBuildFromFile(config *configuration.Config) (*Manifest, error) {
 
 	data = parseForEnvVars(config, data)
 
-	err = yaml.Unmarshal([]byte(data), &t)
+	err = yaml.Unmarshal([]byte(data), &n)
 	if err != nil {
 		return nil, err
 	}
 
-	return t.convertToBuild()
+	// check the version. for now we are going to support only one version
+	// in future, version will select the parser
+	if n.BuildConfig.Version != "2016-02-13" {
+		return nil, errors.New("Invalid build schema version")
+	}
+
+	return n.convertToBuild()
 }
 
 // finds a step in the loaded build.yml by name
@@ -98,12 +110,12 @@ func (b *build) findStepByName(name string) (*step, error) {
 	return nil, nil
 }
 
-func (b *build) convertToBuild() (*Manifest, error) {
+func (n *namespace) convertToBuild() (*Manifest, error) {
 	r := Manifest{}
 	r.IsPrivileged = false
 	r.Steps = []Step{}
 
-	for _, s := range b.Steps {
+	for _, s := range n.BuildConfig.Steps {
 		convertedStep := Step{}
 
 		convertedStep.Manifest = r
@@ -111,7 +123,7 @@ func (b *build) convertToBuild() (*Manifest, error) {
 		convertedStep.Name = s.Name
 		convertedStep.Artefacts = []Artefact{}
 		convertedStep.Command = s.Command
-		if s.Cleanup != nil && !b.Config.NoSquash {
+		if s.Cleanup != nil && !n.Config.NoSquash {
 			convertedStep.Cleanup = &Cleanup{Commands: s.Cleanup.Commands}
 			r.IsPrivileged = true
 		} else {
@@ -146,7 +158,7 @@ func (b *build) convertToBuild() (*Manifest, error) {
 
 	// now that we have the Manifest built from the file, we can resolve dependencies
 	for idx, s := range r.Steps {
-		bStep, err := b.findStepByName(s.Name)
+		bStep, err := n.BuildConfig.findStepByName(s.Name)
 		if err != nil {
 			return nil, err
 		}
