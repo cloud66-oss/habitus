@@ -124,6 +124,10 @@ func (b *Builder) StartBuild() error {
 		return nil
 	}
 
+	if len(b.Build.Steps) < 1 {
+		b.Conf.Logger.Fatal("No build steps found")
+	}
+
 	// Clear after yourself: images, containers, etc (optional for premium users)
 	// except last step
 	for _, s := range b.Build.Steps[:len(b.Build.Steps)-1] {
