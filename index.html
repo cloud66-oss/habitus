@@ -25,31 +25,33 @@
 <h4>Build files</h4>
 <p>Habitus uses a yml file as a descriptor for builds. Here is an example:</p>
 
-<pre>
+<pre class="yaml">
   <code>
-steps:
-  - builder:
-    name: builder
-    dockerfile: Dockerfile.builder
-    artefacts:
-      - /go/src/github.com/cloud66/iron-mountain/iron-mountain
-      - /go/src/github.com/cloud66/iron-mountain/config.json
-      - /go/src/github.com/cloud66/iron-mountain/localhost.crt
-      - /go/src/github.com/cloud66/iron-mountain/localhost.key
-    cleanup:
-      commands:
-        - rm -rf /root/.ssh/
-  - deployment:
-    name: ironmountain
-    dockerfile: Dockerfile.deployment
-    dependson:
-      - builder
-  - uploader:
-    name: uploader
-    dockerfile: Dockerfile.uploader
-    dependson:
-      - ironmountain
-    command: s3cmd --access_key=_env(ACCESS_KEY) --secret_key=_env(SECRET_KEY) put /app/iron-mountain s3://uploads.aws.com
+build:
+  version: 2016-02-13 // version of the build schema. 
+  steps:
+    - builder:
+      name: builder
+      dockerfile: Dockerfile.builder
+      artifacts:
+        - /go/src/github.com/cloud66/iron-mountain/iron-mountain
+        - /go/src/github.com/cloud66/iron-mountain/config.json
+        - /go/src/github.com/cloud66/iron-mountain/localhost.crt
+        - /go/src/github.com/cloud66/iron-mountain/localhost.key
+      cleanup:
+        commands:
+          - rm -rf /root/.ssh/
+    - deployment:
+      name: ironmountain
+      dockerfile: Dockerfile.deployment
+      depends_on:
+        - builder
+    - uploader:
+      name: uploader
+      dockerfile: Dockerfile.uploader
+      depends_on:
+        - ironmountain
+      command: s3cmd --access_key=_env(ACCESS_KEY) --secret_key=_env(SECRET_KEY) put /app/iron-mountain s3://uploads.aws.com
   </code>
 </pre>
 
@@ -61,14 +63,14 @@ steps:
 <ul>
 <li><code>name:</code> Name of the generated image</li>
 <li><code>dockerfile:</code> Dockerfile used to build the step</li>
-<li><code>artefacts:</code> List of all files to be copied out of the image once it's built. See below</li>
+<li><code>artifacts:</code> List of all files to be copied out of the image once it's built. See below</li>
 <li><code>cleanup:</code> List of all cleanup steps to run on the image once the step is finished. See below</li>
-<li><code>dependson:</code>Lists all the steps this step depends on (and should be built prior to this step's build)</li>
+<li><code>depends_on:</code>Lists all the steps this step depends on (and should be built prior to this step's build)</li>
 <li><code>command:</code>A command that will run in the running container after it's built</li>
 </ul>
 
-<h4>Artefacts</h4>
-<p>Artefacts are files to be copied outside of a build image in a step. This can be used when a step is build of a compiled language like Go or Java where the image requires build dependencies. The next step can then use the build step's artefacts in a runtime dependency only image.</p>
+<h4>Artifacts</h4>
+<p>Artifacts are files to be copied outside of a build image in a step. This can be used when a step is build of a compiled language like Go or Java where the image requires build dependencies. The next step can then use the build step's artifacts in a runtime dependency only image.</p>
 <p>Each artefact has two parts: source and destination. Source is the path from within the image and destination where the file will be copied to on the "build server". If destination is missing, the current folder will be used. Full path and file permissions of the source will be preserved during copy. So a file that comes from <code>/app/build/result/abc</code> of the image will go to <code>./app/build/result/abc</code> of the build server if no destination is set.</p>
 
 <p>Here is an example:</p>
@@ -85,7 +87,7 @@ steps:
   <code>- /go/src/service/go-service:/tmp/go-service</code>
 </p>
 
-<p>Artefacts are copied from the container and can be used with <code>ADD</code> or <code>COPY</code> commands in downstream steps. Habitus copies artefact file permissions as well.</p>
+<p>Artifacts are copied from the container and can be used with <code>ADD</code> or <code>COPY</code> commands in downstream steps. Habitus copies artefact file permissions as well.</p>
 
 <p>Here is an example that uses an artefact generated in step <code>builder</code></p>
 
@@ -118,11 +120,11 @@ cleanup:
 <p>Habitus allows dovetailing (sequencing) of images from different steps. This means a step can use the image built by the previous step as the source in its Dockerfile <code>FROM</code> command. This is done automatically if <code>FROM</code> command refers to an image name used by a previous step.</p>
 <p>Habitus automatically parses the <code>FROM</code> image name and replaces it with the correct name when it is used in multi-tenanted setup. This enables multiple builds of the same build file to run in parallel with different session UIDs (see below).</p>
 
-<p>Please note if you are using step A's result in step B's <code>FROM</code> statement, you need to make sure A is listed under <code>dependson</code> attribute of B. Otherwise both A and B will be built in parallel.</p>
+<p>Please note if you are using step A's result in step B's <code>FROM</code> statement, you need to make sure A is listed under <code>depends_on</code> attribute of B. Otherwise both A and B will be built in parallel.</p>
 
 <h4>Step dependencies</h4>
 
-<p>Steps can depend on each other. This can be specified by the <code>dependson</code> attribute.</p>
+<p>Steps can depend on each other. This can be specified by the <code>depends_on</code> attribute.</p>
 
 <p>Steps can depend on one or more of the other steps. This will determine the build order for steps. Independent steps are built in parallel and according to the build order defined by dependencies.</p>
 
@@ -131,7 +133,7 @@ cleanup:
 
 <pre>
   <code>
-artefacts:
+artifacts:
       - /go/src/go-service/_env(SERVICE_NAME)
   </code>
 </pre>
@@ -147,11 +149,11 @@ artefacts:
 
 <h4>Running commands</h4>
 
-<p>Habitus allows you to run an arbitary command inside of a built container. This can be useful in many cases like uploading the build artefacts to webserver, resetting your exception handling service after each build or starting your release process.</p>
+<p>Habitus allows you to run an arbitary command inside of a built container. This can be useful in many cases like uploading the build artifacts to webserver, resetting your exception handling service after each build or starting your release process.</p>
 
 <p><code>command</code> attribute is optional. If present, the image is built and a container is started based on it to run the command.</p>
 
-<p><code>command</code> runs after the build, cleanup and copying of the artefacts are done.</p>
+<p><code>command</code> runs after the build, cleanup and copying of the artifacts are done.</p>
 
 <p>An example to upload a build artefact to S3 can be like this</p>
 
@@ -164,7 +166,7 @@ artefacts:
 
 <p><code><a href="https://hub.docker.com/r/cloud66/uploader/">cloud66/uploader</a></code> is a simple Docker image that has <a href="http://s3tools.org/s3cmd">S3CMD</a> installed on it. </p>
 
-<p>The Dockerfile here is a simple one that starts from <code>cloud66/uploader</code> and adds one of the build artefacts to the image so it can be uploaded to S3.</p>
+<p>The Dockerfile here is a simple one that starts from <code>cloud66/uploader</code> and adds one of the build artifacts to the image so it can be uploaded to S3.</p>
 
 <h4>Command line parameters</h4>
 <p>Habitus accepts the following command line parameters:</p>
