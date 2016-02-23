@@ -5,8 +5,6 @@ Habitus
 A Docker Build Flow Tool
 ------------------------
 
-<a href="https://github.com/cloud66/habitus" class="btn">View on GitHub</a>
-
 ### <a href="#welcome-to-github-pages" id="welcome-to-github-pages" class="anchor"><span class="octicon octicon-link"></span></a>Welcome to Habitus
 
 Habitus is a standalone Docker build flow tool. It is a command line tool that builds Docker images based on their `Dockerfile` and a `build.yml`.
