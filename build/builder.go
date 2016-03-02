@@ -99,8 +99,8 @@ func NewBuilder(manifest *Manifest, conf *configuration.Config) *Builder {
 // StartBuild runs the build process end to end
 func (b *Builder) StartBuild() error {
 	b.Conf.Logger.Debug("Building %d steps", len(b.Build.Steps))
-	for _, s := range b.Build.Steps {
-		b.Conf.Logger.Debug("Step %s", s.Name)
+	for name, _ := range b.Build.Steps {
+		b.Conf.Logger.Debug("Step %s", name)
 	}
 
 	for _, levels := range b.Build.buildLevels {

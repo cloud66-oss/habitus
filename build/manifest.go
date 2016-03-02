@@ -29,6 +29,7 @@ type Cleanup struct {
 // Public structs. They are used to store the build for the builders
 type Step struct {
 	Name       string
+	Label      string
 	Dockerfile string
 	Artefacts  []Artefact
 	Manifest   Manifest
@@ -61,9 +62,9 @@ type step struct {
 
 // This is loaded from the build.yml file
 type build struct {
-	Version string `yaml:"version"`
-	Workdir string `yaml:"work_dir"`
-	Steps   []step `yaml:"steps"`
+	Version string          `yaml:"version"`
+	Workdir string          `yaml:"work_dir"`
+	Steps   map[string]step `yaml:"steps"`
 }
 
 // Habitus build namespace
@@ -99,28 +100,18 @@ func LoadBuildFromFile(config *configuration.Config) (*Manifest, error) {
 	return n.convertToBuild()
 }
 
-// finds a step in the loaded build.yml by name
-func (b *build) findStepByName(name string) (*step, error) {
-	for _, step := range b.Steps {
-		if step.Name == name {
-			return &step, nil
-		}
-	}
-
-	return nil, nil
-}
-
 func (n *namespace) convertToBuild() (*Manifest, error) {
 	r := Manifest{}
 	r.IsPrivileged = false
 	r.Steps = []Step{}
 
-	for _, s := range n.BuildConfig.Steps {
+	for name, s := range n.BuildConfig.Steps {
 		convertedStep := Step{}
 
 		convertedStep.Manifest = r
 		convertedStep.Dockerfile = s.Dockerfile
 		convertedStep.Name = s.Name
+		convertedStep.Label = name
 		convertedStep.Artefacts = []Artefact{}
 		convertedStep.Command = s.Command
 		if s.Cleanup != nil && !n.Config.NoSquash {
@@ -157,17 +148,11 @@ func (n *namespace) convertToBuild() (*Manifest, error) {
 	}
 
 	// now that we have the Manifest built from the file, we can resolve dependencies
-	for idx, s := range r.Steps {
-		bStep, err := n.BuildConfig.findStepByName(s.Name)
-		if err != nil {
-			return nil, err
-		}
-		if bStep == nil {
-			return nil, fmt.Errorf("step not found %s", s.Name)
-		}
+	for idx, step := range r.Steps {
+		bStep := n.BuildConfig.Steps[step.Label]
 
 		for _, d := range bStep.DependsOn {
-			convertedStep, err := r.FindStepByName(d)
+			convertedStep, err := r.FindStepByLabel(d)
 			if err != nil {
 				return nil, err
 			}
@@ -260,6 +245,16 @@ func (m *Manifest) serviceOrder(mainList []Step) ([][]Step, error) {
 func (m *Manifest) FindStepByName(name string) (*Step, error) {
 	for _, step := range m.Steps {
 		if step.Name == name {
+			return &step, nil
+		}
+	}
+
+	return nil, nil
+}
+
+func (m *Manifest) FindStepByLabel(label string) (*Step, error) {
+	for _, step := range m.Steps {
+		if step.Label == label {
 			return &step, nil
 		}
 	}
