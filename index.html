@@ -28,9 +28,9 @@
 <pre class="yaml">
   <code>
 build:
-  version: 2016-02-13 // version of the build schema. 
+  version: 2016-02-13 // version of the build schema.
   steps:
-    - builder:
+    builder:
       name: builder
       dockerfile: Dockerfile.builder
       artifacts:
@@ -41,7 +41,7 @@ build:
       cleanup:
         commands:
           - rm -rf /root/.ssh/
-    - deployment:
+    deployment:
       name: ironmountain
       dockerfile: Dockerfile.deployment
       depends_on:
@@ -223,7 +223,7 @@ artifacts:
 
 <!-- Hacker News -->
     <a href="https://news.ycombinator.com/submitlink?u=http://habitus.io&t=Habitus%20:%20an%20open%20source%20Docker%20build%20flow%20tool" target="_blank">
-        <img src="images/hackernews.png" alt="HackerNews"></a> 
+        <img src="images/hackernews.png" alt="HackerNews"></a>
 
 
 
