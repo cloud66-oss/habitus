@@ -46,7 +46,7 @@ build:
       dockerfile: Dockerfile.deployment
       depends_on:
         - builder
-    - uploader:
+    uploader:
       name: uploader
       dockerfile: Dockerfile.uploader
       depends_on:
