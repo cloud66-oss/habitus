@@ -18,9 +18,11 @@ var format = logging.MustStringFormatter(
 )
 
 var (
-	flagLevel  string
-	VERSION    string = "dev"
-	BUILD_DATE string = ""
+	flagLevel       string
+	flagShowHelp    bool
+	flagShowVersion bool
+	VERSION         string = "dev"
+	BUILD_DATE      string = ""
 )
 
 func init() {
@@ -53,14 +55,25 @@ func main() {
 	flag.BoolVar(&config.NoSquash, "no-cleanup", false, "Skip cleanup commands for this run. Used for debugging")
 	flag.BoolVar(&config.FroceRmImages, "force-rmi", false, "Force remove of unwanted images")
 	flag.BoolVar(&config.NoPruneRmImages, "noprune-rmi", false, "No pruning of unwanted images")
+	flag.BoolVar(&flagShowHelp, "help", false, "Display the help")
+	flag.BoolVar(&flagShowVersion, "version", false, "Display version information")
 
 	config.Logger = *log
 
 	flag.Parse()
 
-	if len(args) > 0 && args[0] == "help" {
-		fmt.Println("cxbuild - (c) 2015 Cloud 66 Inc.")
+	if flagShowHelp || (len(args) > 0 && args[0] == "help") {
+		fmt.Println("Habitus - (c) 2016 Cloud 66 Inc.")
 		flag.PrintDefaults()
+		return
+	}
+
+	if flagShowVersion || (len(args) > 0 && args[0] == "version") {
+		if BUILD_DATE == "" {
+			fmt.Printf("Habitus - v%s (c) 2016 Cloud 66 Inc.\n", VERSION)
+		} else {
+			fmt.Printf("Habitus - v%s (%s) (c) 2016 Cloud 66 Inc.\n", VERSION, BUILD_DATE)
+		}
 		return
 	}
 
