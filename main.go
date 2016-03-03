@@ -21,7 +21,7 @@ var (
 	flagLevel       string
 	flagShowHelp    bool
 	flagShowVersion bool
-	VERSION         string = "dev"
+	VERSION         string = "0.3.0"
 	BUILD_DATE      string = ""
 )
 
