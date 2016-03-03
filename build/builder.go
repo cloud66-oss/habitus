@@ -261,7 +261,7 @@ func (b *Builder) BuildStep(step *Step) error {
 				return err
 			}
 
-			tmpFile, err := ioutil.TempFile("", "cxbuild-export-")
+			tmpFile, err := ioutil.TempFile("", "habitus-export-")
 			if err != nil {
 				return err
 			}
@@ -284,7 +284,7 @@ func (b *Builder) BuildStep(step *Step) error {
 			}
 
 			// Squash
-			sqTmpFile, err := ioutil.TempFile("", "cxbuild-export-")
+			sqTmpFile, err := ioutil.TempFile("", "habitus-export-")
 			if err != nil {
 				return err
 			}
