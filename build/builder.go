@@ -389,17 +389,19 @@ func (b *Builder) BuildStep(step *Step) error {
 		if step.Command != "" {
 			b.Conf.Logger.Notice("Starting container %s to run commands", container.ID)
 			startOpts := &docker.HostConfig{}
+			
 			err := b.docker.StartContainer(container.ID, startOpts)
 			if err != nil {
 				return err
 			}
 
+		
 			execOpts := docker.CreateExecOptions{
 				Container:    container.ID,
 				AttachStdin:  false,
 				AttachStdout: true,
 				AttachStderr: true,
-				Tty:          false,
+				Tty:          true,
 				Cmd:          strings.Split(step.Command, " "),
 			}
 			execObj, err := b.docker.CreateExec(execOpts)
@@ -407,17 +409,34 @@ func (b *Builder) BuildStep(step *Step) error {
 				return err
 			}
 
-			buf := new(bytes.Buffer)
+			buf1 := new(bytes.Buffer)
+			buf2 := new(bytes.Buffer)
+			
 			startExecOpts := docker.StartExecOptions{
-				OutputStream: buf,
+				OutputStream: buf1,
 				ErrorStream:  os.Stderr,
-				RawTerminal:  false,
+				RawTerminal:  true,
 				Detach:       false,
 			}
 
+			b.Conf.Logger.Notice("Running command %s on container %s", execOpts.Cmd, container.ID)
+			
+			
 			if err := b.docker.StartExec(execObj.ID, startExecOpts); err != nil {
 				b.Conf.Logger.Error("Failed to execute command '%s' due to %s", step.Command, err.Error())
 			}
+
+			b.Conf.Logger.Notice("Output command %s", buf1)
+			b.Conf.Logger.Notice("Error command %s", buf2)
+			
+
+			inspect, err := b.docker.InspectExec(execObj.ID)
+			if err != nil {
+				return err
+			}	
+			b.Conf.Logger.Error("Exit code = %d", inspect.ExitCode)
+			b.Conf.Logger.Error("Running = %t", inspect.Running)
+
 
 			b.Conf.Logger.Debug("Stopping the container %s", container.ID)
 			err = b.docker.StopContainer(container.ID, 0)
