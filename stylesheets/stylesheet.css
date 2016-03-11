@@ -61,7 +61,7 @@ a {
 
 @media screen and (min-width: 64em) {
   .page-header {
-    padding: 5rem 6rem; } }
+    padding: 2rem 6rem; } }
 
 @media screen and (min-width: 42em) and (max-width: 64em) {
   .page-header {
@@ -243,3 +243,79 @@ a {
 @media screen and (max-width: 42em) {
   .site-footer {
     font-size: 0.9rem; } }
+
+
+
+
+
+
+
+  .logo{
+     margin-top: 17px;
+  }
+  .logotext{
+     font-size: 10px;
+    }
+  .socialbuttons {
+     position: fixed;
+     top: 515px;
+     right: 50px;
+     width: 24px; 
+     }
+  @media screen and (max-width: 42em) {
+    .socialbuttons{
+      display: none;
+    }
+  }
+  .socialbutton{
+    display:block;
+    background: white;
+    color: rgb(21, 153, 102);
+    padding: 2px;
+    text-transform: center;
+    font-size: 20px;
+    transition: all 0.4s;
+  }
+  .socialbutton:hover{
+    color: rgb(21, 88, 152)
+  }
+
+  .btn1 {
+    display: inline-block;
+    margin-bottom: 4rem;
+    color: rgb(255, 255, 255);
+    background-color: rgb(21, 153, 102);
+    border-color: rgb(21, 153, 102);
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 0.3rem;
+    padding: 1rem 1.2rem;
+    transition: color 0.2s, background-color 0.2s, border-color 0.2s; 
+  }
+  .call-to-action{
+    margin-top: 100px;
+    text-align: center;
+  }
+    
+
+  .YouTube{
+    margin: 45px;
+    text-align: center;
+  }
+  @media screen and (max-width: 42em) {
+    .YouTube{
+      display: none;
+    }
+  }
+
+  .articles{
+    margin: 45px;
+    text-align: center;
+  }
+  .poverlogo{
+    margin: 6px;
+    text-align: center;
+  }
+
+
+
