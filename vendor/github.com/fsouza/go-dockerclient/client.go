@@ -586,7 +586,7 @@ func (c *Client) hijack(method, path string, hijackOptions hijackOptions) error 
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "plain/text")
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Connection", "Upgrade")
 	req.Header.Set("Upgrade", "tcp")
 	protocol := c.endpointURL.Scheme
