@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/cloud66/habitus",
-	"GoVersion": "go1.5.1",
+	"GoVersion": "go1.6",
 	"Deps": [
 		{
 			"ImportPath": "github.com/bugsnag/bugsnag-go",
@@ -36,7 +36,7 @@
 		},
 		{
 			"ImportPath": "github.com/fsouza/go-dockerclient",
-			"Rev": "af9789bbd78acf3e279274caa54682185eb7ed33"
+			"Rev": "73f08fbacc09c6fd1b7bc179193e58b14d7619cc"
 		},
 		{
 			"ImportPath": "github.com/op/go-logging",

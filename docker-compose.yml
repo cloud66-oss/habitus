@@ -6,4 +6,3 @@ habitus:
   environment:
     - DOCKER_HOST=$DOCKER_HOST
     - DOCKER_CERT_PATH=/usr/local/docker/default
-    - GO15VENDOREXPERIMENT=1
