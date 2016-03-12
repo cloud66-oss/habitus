@@ -409,11 +409,9 @@ func (b *Builder) BuildStep(step *Step) error {
 				return err
 			}
 
-			buf1 := new(bytes.Buffer)
-			buf2 := new(bytes.Buffer)
-			
+			buf := new(bytes.Buffer)
 			startExecOpts := docker.StartExecOptions{
-				OutputStream: buf1,
+				OutputStream: buf,
 				ErrorStream:  os.Stderr,
 				RawTerminal:  true,
 				Detach:       false,
@@ -426,17 +424,20 @@ func (b *Builder) BuildStep(step *Step) error {
 				b.Conf.Logger.Error("Failed to execute command '%s' due to %s", step.Command, err.Error())
 			}
 
-			b.Conf.Logger.Notice("Output command %s", buf1)
-			b.Conf.Logger.Notice("Error command %s", buf2)
+			b.Conf.Logger.Notice("\n%s", buf)
 			
 
 			inspect, err := b.docker.InspectExec(execObj.ID)
 			if err != nil {
 				return err
 			}	
-			b.Conf.Logger.Error("Exit code = %d", inspect.ExitCode)
-			b.Conf.Logger.Error("Running = %t", inspect.Running)
 
+			if inspect.ExitCode != 0 {
+				b.Conf.Logger.Error("Running command %s on container %s exit with exit code %d", execOpts.Cmd, container.ID, inspect.ExitCode)
+				return err
+			} else {
+				b.Conf.Logger.Notice("Running command %s on container %s exit with exit code %d", execOpts.Cmd, container.ID, inspect.ExitCode)
+			}
 
 			b.Conf.Logger.Debug("Stopping the container %s", container.ID)
 			err = b.docker.StopContainer(container.ID, 0)
