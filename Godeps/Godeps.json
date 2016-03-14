@@ -1,10 +1,126 @@
 {
 	"ImportPath": "github.com/cloud66/habitus",
 	"GoVersion": "go1.6",
-	"Packages": [
-		"github.com/onsi/ginkgo"
-	],
 	"Deps": [
+		{
+			"ImportPath": "github.com/ant0ine/go-json-rest/rest",
+			"Comment": "v3.3.0-10-g01a517a",
+			"Rev": "01a517a7065ab0030bf286c6a8e5abc9b245c776"
+		},
+		{
+			"ImportPath": "github.com/ant0ine/go-json-rest/rest/trie",
+			"Comment": "v3.3.0-10-g01a517a",
+			"Rev": "01a517a7065ab0030bf286c6a8e5abc9b245c776"
+		},
+		{
+			"ImportPath": "github.com/bugsnag/bugsnag-go",
+			"Comment": "v1.0.5-19-g02e9528",
+			"Rev": "02e952891c52fbcb15f113d90633897355783b6e"
+		},
+		{
+			"ImportPath": "github.com/bugsnag/bugsnag-go/errors",
+			"Comment": "v1.0.5-19-g02e9528",
+			"Rev": "02e952891c52fbcb15f113d90633897355783b6e"
+		},
+		{
+			"ImportPath": "github.com/bugsnag/osext",
+			"Rev": "0dd3f918b21bec95ace9dc86c7e70266cfc5c702"
+		},
+		{
+			"ImportPath": "github.com/bugsnag/panicwrap",
+			"Rev": "e5f9854865b9778a45169fc249e99e338d4d6f27"
+		},
+		{
+			"ImportPath": "github.com/dchest/uniuri",
+			"Rev": "8902c56451e9b58ff940bbe5fec35d5f9c04584a"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/builder/dockerfile/command",
+			"Comment": "v1.4.1-10811-gc5aedcd",
+			"Rev": "c5aedcdac9c30e764c22d1be1dd2c08c52c74fcc"
+		},
+		{
+			"ImportPath": "github.com/docker/docker/builder/dockerfile/parser",
+			"Comment": "v1.4.1-10811-gc5aedcd",
+			"Rev": "c5aedcdac9c30e764c22d1be1dd2c08c52c74fcc"
+		},
+		{
+			"ImportPath": "github.com/docker/go-units",
+			"Comment": "v0.3.0",
+			"Rev": "5d2041e26a699eaca682e2ea41c8f891e1060444"
+		},
+		{
+			"ImportPath": "github.com/fsouza/go-dockerclient",
+			"Rev": "cec3f19b1d800de38185ec0e08446156254ec463"
+		},
+		{
+			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/Sirupsen/logrus",
+			"Rev": "cec3f19b1d800de38185ec0e08446156254ec463"
+		},
+		{
+			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/opts",
+			"Rev": "cec3f19b1d800de38185ec0e08446156254ec463"
+		},
+		{
+			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/archive",
+			"Rev": "cec3f19b1d800de38185ec0e08446156254ec463"
+		},
+		{
+			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/fileutils",
+			"Rev": "cec3f19b1d800de38185ec0e08446156254ec463"
+		},
+		{
+			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/homedir",
+			"Rev": "cec3f19b1d800de38185ec0e08446156254ec463"
+		},
+		{
+			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/idtools",
+			"Rev": "cec3f19b1d800de38185ec0e08446156254ec463"
+		},
+		{
+			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/ioutils",
+			"Rev": "cec3f19b1d800de38185ec0e08446156254ec463"
+		},
+		{
+			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/longpath",
+			"Rev": "cec3f19b1d800de38185ec0e08446156254ec463"
+		},
+		{
+			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/pools",
+			"Rev": "cec3f19b1d800de38185ec0e08446156254ec463"
+		},
+		{
+			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/promise",
+			"Rev": "cec3f19b1d800de38185ec0e08446156254ec463"
+		},
+		{
+			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/stdcopy",
+			"Rev": "cec3f19b1d800de38185ec0e08446156254ec463"
+		},
+		{
+			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/docker/docker/pkg/system",
+			"Rev": "cec3f19b1d800de38185ec0e08446156254ec463"
+		},
+		{
+			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/docker/go-units",
+			"Rev": "cec3f19b1d800de38185ec0e08446156254ec463"
+		},
+		{
+			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/hashicorp/go-cleanhttp",
+			"Rev": "cec3f19b1d800de38185ec0e08446156254ec463"
+		},
+		{
+			"ImportPath": "github.com/fsouza/go-dockerclient/external/github.com/opencontainers/runc/libcontainer/user",
+			"Rev": "cec3f19b1d800de38185ec0e08446156254ec463"
+		},
+		{
+			"ImportPath": "github.com/fsouza/go-dockerclient/external/golang.org/x/net/context",
+			"Rev": "cec3f19b1d800de38185ec0e08446156254ec463"
+		},
+		{
+			"ImportPath": "github.com/fsouza/go-dockerclient/external/golang.org/x/sys/unix",
+			"Rev": "cec3f19b1d800de38185ec0e08446156254ec463"
+		},
 		{
 			"ImportPath": "github.com/onsi/ginkgo",
 			"Comment": "v1.2.0-46-gc3a655f",
@@ -79,6 +195,79 @@
 			"ImportPath": "github.com/onsi/ginkgo/types",
 			"Comment": "v1.2.0-46-gc3a655f",
 			"Rev": "c3a655f9b37a2207fa39721b078b3173ee9218d6"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega",
+			"Comment": "v1.0-91-g7ce781e",
+			"Rev": "7ce781ea776b2fd506491011353bded2e40c8467"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega/format",
+			"Comment": "v1.0-91-g7ce781e",
+			"Rev": "7ce781ea776b2fd506491011353bded2e40c8467"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega/internal/assertion",
+			"Comment": "v1.0-91-g7ce781e",
+			"Rev": "7ce781ea776b2fd506491011353bded2e40c8467"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega/internal/asyncassertion",
+			"Comment": "v1.0-91-g7ce781e",
+			"Rev": "7ce781ea776b2fd506491011353bded2e40c8467"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega/internal/oraclematcher",
+			"Comment": "v1.0-91-g7ce781e",
+			"Rev": "7ce781ea776b2fd506491011353bded2e40c8467"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega/internal/testingtsupport",
+			"Comment": "v1.0-91-g7ce781e",
+			"Rev": "7ce781ea776b2fd506491011353bded2e40c8467"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega/matchers",
+			"Comment": "v1.0-91-g7ce781e",
+			"Rev": "7ce781ea776b2fd506491011353bded2e40c8467"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega/matchers/support/goraph/bipartitegraph",
+			"Comment": "v1.0-91-g7ce781e",
+			"Rev": "7ce781ea776b2fd506491011353bded2e40c8467"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega/matchers/support/goraph/edge",
+			"Comment": "v1.0-91-g7ce781e",
+			"Rev": "7ce781ea776b2fd506491011353bded2e40c8467"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega/matchers/support/goraph/node",
+			"Comment": "v1.0-91-g7ce781e",
+			"Rev": "7ce781ea776b2fd506491011353bded2e40c8467"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega/matchers/support/goraph/util",
+			"Comment": "v1.0-91-g7ce781e",
+			"Rev": "7ce781ea776b2fd506491011353bded2e40c8467"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega/types",
+			"Comment": "v1.0-91-g7ce781e",
+			"Rev": "7ce781ea776b2fd506491011353bded2e40c8467"
+		},
+		{
+			"ImportPath": "github.com/op/go-logging",
+			"Comment": "v1-5-gd2e44aa",
+			"Rev": "d2e44aa77b7195c0ef782189985dd8550e22e4de"
+		},
+		{
+			"ImportPath": "github.com/satori/go.uuid",
+			"Rev": "e673fdd4dea8a7334adbbe7f57b7e4b00bdc5502"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "49c95bdc21843256fb6c4e0d370a05f24a0bf213"
 		}
 	]
 }

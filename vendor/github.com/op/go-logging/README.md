@@ -7,6 +7,10 @@ is customizable and supports different logging backends like syslog, file and
 memory. Multiple backends can be utilized with different log levels per backend
 and logger.
 
+**_NOTE:_** backwards compatibility promise have been dropped for master. Please
+vendor this package or use `gopkg.in/op/go-logging.v1` for previous version. See
+[changelog](CHANGELOG.md) for details.
+
 ## Example
 
 Let's have a look at an [example](examples/example.go) which demonstrates most
@@ -29,7 +33,7 @@ var log = logging.MustGetLogger("example")
 // which is dependent on the log level. Many fields have a custom output
 // formatting too, eg. the time returns the hour down to the milli second.
 var format = logging.MustStringFormatter(
-	"%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}",
+	`%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
 )
 
 // Password is just an example type implementing the Redactor interface. Any
@@ -57,7 +61,7 @@ func main() {
 	// Set the backends to be used.
 	logging.SetBackend(backend1Leveled, backend2Formatter)
 
-	log.Debug("debug %s", Password("secret"))
+	log.Debugf("debug %s", Password("secret"))
 	log.Info("info")
 	log.Notice("notice")
 	log.Warning("warning")
@@ -74,7 +78,7 @@ func main() {
 
 After this command *go-logging* is ready to use. Its source will be in:
 
-    $GOROOT/src/pkg/github.com/op/go-logging
+    $GOPATH/src/pkg/github.com/op/go-logging
 
 You can use `go get -u` to update the package.
 
