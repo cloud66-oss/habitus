@@ -199,7 +199,13 @@ If you want to contribute to Habitus. You can build Habitus using Habitus, run H
 To make sure you a have isolated development environment for contribution. You can use the `docker-compose` for developing, testing and compiling. 
 
 <kbd>$ docker-compose run habitus</kbd>
+
+Building habitus inside a docker container:
+
 <kbd>root@xx:/usr/local/go/src/github.com/cloud66/habitus# go build</kbd>
+
+Running the tests:
+
 <kbd>root@xx:/usr/local/go/src/github.com/cloud66/habitus# go test</kbd>
 
 
