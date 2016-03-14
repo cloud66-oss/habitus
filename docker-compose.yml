@@ -1,4 +1,5 @@
 habitus:
+  dockerfile: Dockerfile.tester
   build: .
   volumes:
     - ${PWD}:/usr/local/go/src/github.com/cloud66/habitus
