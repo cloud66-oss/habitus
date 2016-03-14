@@ -1,5 +1,5 @@
 build:
-  version: 2016-02-13 #version 
+  version: 2016-03-14
   steps:
     builder:
       name: builder
@@ -8,13 +8,13 @@ build:
         - /usr/local/go/src/github.com/cloud66/habitus/habitus:./artifacts/habitus
     tester:
       name: tester
-      depends_on: 
+      depends_on:
         - builder
       dockerfile: Dockerfile.tester
       command: go test
     crosscompile:
       name: crosscompile
-      depends_on: 
+      depends_on:
         - tester
       dockerfile: Dockerfile.crosscompile
       artifacts:
@@ -24,5 +24,3 @@ build:
         - /usr/local/go/src/github.com/cloud66/habitus/compiled/habitus_windows_amd64.exe:./artifacts/compiled
         - /usr/local/go/src/github.com/cloud66/habitus/compiled/habitus_linux_386:./artifacts/compiled
         - /usr/local/go/src/github.com/cloud66/habitus/compiled/habitus_linux_amd64:./artifacts/compiled
-        
-      

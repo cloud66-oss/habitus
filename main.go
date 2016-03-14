@@ -51,12 +51,14 @@ func main() {
 	flag.StringVar(&config.DockerHost, "host", os.Getenv("DOCKER_HOST"), "Docker host link. Uses DOCKER_HOST if missing")
 	flag.StringVar(&config.DockerCert, "certs", os.Getenv("DOCKER_CERT_PATH"), "Docker cert folder. Uses DOCKER_CERT_PATH if missing")
 	flag.Var(&config.EnvVars, "env", "Environment variables to be used during build. Uses parent process environment variables if empty")
+	flag.Var(&config.BuildArgs, "build", "Build arguments to be used during build.")
 	flag.BoolVar(&config.KeepSteps, "keep-all", false, "Overrides the keep flag for all steps. Used for debugging")
 	flag.BoolVar(&config.NoSquash, "no-cleanup", false, "Skip cleanup commands for this run. Used for debugging")
 	flag.BoolVar(&config.FroceRmImages, "force-rmi", false, "Force remove of unwanted images")
 	flag.BoolVar(&config.NoPruneRmImages, "noprune-rmi", false, "No pruning of unwanted images")
 	flag.BoolVar(&flagShowHelp, "help", false, "Display the help")
 	flag.BoolVar(&flagShowVersion, "version", false, "Display version information")
+	flag.IntVar(&config.ApiPort, "port", 8080, "Port to server the API")
 
 	config.Logger = *log
 
@@ -108,6 +110,15 @@ func main() {
 	}
 
 	b := build.NewBuilder(c, &config)
+
+	// start the API
+	api := &server{builder: b}
+	err = api.StartServer()
+	if err != nil {
+		log.Fatal("Cannot start API server due to %s", err.Error())
+		os.Exit(2)
+	}
+
 	err = b.StartBuild()
 	if err != nil {
 		log.Error("Error during build %s", err.Error())
