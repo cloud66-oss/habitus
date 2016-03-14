@@ -7,6 +7,7 @@
 	fmtcheck \
 	pretest \
 	test \
+	integration \
 	cov \
 	clean
 
@@ -28,15 +29,29 @@ vet:
 	$(foreach pkg,$(PKGS),go vet $(pkg);)
 
 fmt:
-	gofmt -w $(SRCS)
+	gofmt -s -w $(SRCS)
 
 fmtcheck:
-	$(foreach file,$(SRCS),gofmt $(file) | diff -u $(file) - || exit;)
+	@ export output=$$(gofmt -s -d $(SRCS)); \
+		[ -n "$${output}" ] && echo "$${output}" && export status=1; \
+		exit $${status:-0}
+
+prepare_docker:
+	sudo stop docker || true
+	sudo rm -rf /var/lib/docker
+	sudo rm -f `which docker`
+	sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+	echo "deb https://apt.dockerproject.org/repo ubuntu-trusty main" | sudo tee /etc/apt/sources.list.d/docker.list
+	sudo apt-get update
+	sudo apt-get install docker-engine=$(DOCKER_VERSION)-0~$(shell lsb_release -cs) -y --force-yes -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
 
 pretest: lint vet fmtcheck
 
 test: pretest
 	$(foreach pkg,$(PKGS),go test $(pkg) || exit;)
+
+integration:
+	go test -tags docker_integration -run TestIntegration -v
 
 cov:
 	@ go get -v github.com/axw/gocov/gocov
