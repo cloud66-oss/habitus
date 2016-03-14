@@ -43,6 +43,7 @@ type Image struct {
 	Architecture    string    `json:"Architecture,omitempty" yaml:"Architecture,omitempty"`
 	Size            int64     `json:"Size,omitempty" yaml:"Size,omitempty"`
 	VirtualSize     int64     `json:"VirtualSize,omitempty" yaml:"VirtualSize,omitempty"`
+	RepoDigests     []string  `json:"RepoDigests,omitempty" yaml:"RepoDigests,omitempty"`
 }
 
 // ImagePre012 serves the same purpose as the Image type except that it is for
@@ -89,6 +90,7 @@ type ListImagesOptions struct {
 	All     bool
 	Filters map[string][]string
 	Digests bool
+	Filter  string
 }
 
 // ListImages returns the list of available images in the server.
@@ -408,6 +410,8 @@ type BuildImageOptions struct {
 	Memory              int64              `qs:"memory"`
 	Memswap             int64              `qs:"memswap"`
 	CPUShares           int64              `qs:"cpushares"`
+	CPUQuota            int64              `qs:"cpuquota"`
+	CPUPeriod           int64              `qs:"cpuperiod"`
 	CPUSetCPUs          string             `qs:"cpusetcpus"`
 	InputStream         io.Reader          `qs:"-"`
 	OutputStream        io.Writer          `qs:"-"`
@@ -416,6 +420,8 @@ type BuildImageOptions struct {
 	Auth                AuthConfiguration  `qs:"-"` // for older docker X-Registry-Auth header
 	AuthConfigs         AuthConfigurations `qs:"-"` // for newer docker X-Registry-Config header
 	ContextDir          string             `qs:"-"`
+	Ulimits             []ULimit           `qs:"-"`
+	BuildArgs           []BuildArg         `qs:"-"`
 }
 
 // BuildImage builds an image from a tarball's url or a Dockerfile in the input
@@ -449,7 +455,28 @@ func (c *Client) BuildImage(opts BuildImageOptions) error {
 		}
 	}
 
-	return c.stream("POST", fmt.Sprintf("/build?%s", queryString(&opts)), streamOptions{
+	qs := queryString(&opts)
+	if len(opts.Ulimits) > 0 {
+		if b, err := json.Marshal(opts.Ulimits); err == nil {
+			item := url.Values(map[string][]string{})
+			item.Add("ulimits", string(b))
+			qs = fmt.Sprintf("%s&%s", qs, item.Encode())
+		}
+	}
+
+	if len(opts.BuildArgs) > 0 {
+		v := make(map[string]string)
+		for _, arg := range opts.BuildArgs {
+			v[arg.Name] = arg.Value
+		}
+		if b, err := json.Marshal(v); err == nil {
+			item := url.Values(map[string][]string{})
+			item.Add("buildargs", string(b))
+			qs = fmt.Sprintf("%s&%s", qs, item.Encode())
+		}
+	}
+
+	return c.stream("POST", fmt.Sprintf("/build?%s", qs), streamOptions{
 		setRawTerminal: true,
 		rawJSONStream:  opts.RawJSONStream,
 		headers:        headers,
@@ -486,6 +513,11 @@ func (c *Client) TagImage(name string, opts TagImageOptions) error {
 	}
 	resp, err := c.do("POST", fmt.Sprintf("/images/"+name+"/tag?%s",
 		queryString(&opts)), doOptions{})
+
+	if err != nil {
+		return err
+	}
+
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
@@ -550,5 +582,31 @@ func (c *Client) SearchImages(term string) ([]APIImageSearch, error) {
 	if err := json.NewDecoder(resp.Body).Decode(&searchResult); err != nil {
 		return nil, err
 	}
+	return searchResult, nil
+}
+
+// SearchImagesEx search the docker hub with a specific given term and authentication.
+//
+// See https://goo.gl/AYjyrF for more details.
+func (c *Client) SearchImagesEx(term string, auth AuthConfiguration) ([]APIImageSearch, error) {
+	headers, err := headersWithAuth(auth)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.do("GET", "/images/search?term="+term, doOptions{
+		headers: headers,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	var searchResult []APIImageSearch
+	if err := json.NewDecoder(resp.Body).Decode(&searchResult); err != nil {
+		return nil, err
+	}
+
 	return searchResult, nil
 }
