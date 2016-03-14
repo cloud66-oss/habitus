@@ -190,3 +190,19 @@ All builds and images will be tagged with the `uid` for this unless a step name 
   [gnu tar]: https://www.gnu.org/software/tar/
   [Instructions for OSX]: https://github.com/cloud66/habitus/blob/gh-pages/gnu-tar.md
   
+#### Building Habitus using Habitus
+
+If you want to contribute to Habitus. You can build Habitus using Habitus, run Habitus in the root directory of this repository. The latest version is generated (after tests) inside the `./artifacts/compiled` directory.
+
+<kbd>$ sudo habitus –host $DOCKER\_HOST –certs $DOCKER\_CERT\_PATH</kbd>
+
+To make sure you a have isolated development environment for contribution. You can use the `docker-compose` for developing, testing and compiling. 
+
+<kbd>$ docker-compose run habitus</kbd>
+<kbd>root@xx:/usr/local/go/src/github.com/cloud66/habitus# go build</kbd>
+<kbd>root@xx:/usr/local/go/src/github.com/cloud66/habitus# go test</kbd>
+
+
+
+
+
