@@ -7,12 +7,12 @@ import (
 	"github.com/op/go-logging"
 )
 
-type EnvVarItem struct {
+type TupleItem struct {
 	Key   string
 	Value string
 }
 
-type EnvVarsArray []EnvVarItem
+type TupleArray []TupleItem
 
 // Config stores application configurations
 type Config struct {
@@ -26,30 +26,33 @@ type Config struct {
 	Logger              logging.Logger
 	DockerHost          string
 	DockerCert          string
-	EnvVars             EnvVarsArray
+	EnvVars             TupleArray
+	BuildArgs           TupleArray
 	KeepSteps           bool
 	NoSquash            bool
 	NoPruneRmImages     bool
 	FroceRmImages       bool
+	ApiPort             int
+	ApiBinding          string
 }
 
-func (i *EnvVarsArray) String() string {
+func (i *TupleArray) String() string {
 	return ""
 }
 
-func (i *EnvVarsArray) Set(value string) error {
+func (i *TupleArray) Set(value string) error {
 	parts := strings.Split(value, "=")
 
 	if len(parts) != 2 {
-		return errors.New("invalid environment variable format (key=value)")
+		return errors.New("invalid key/value format (key=value)")
 	}
 
-	item := EnvVarItem{Key: parts[0], Value: parts[1]}
+	item := TupleItem{Key: parts[0], Value: parts[1]}
 	*i = append(*i, item)
 	return nil
 }
 
-func (i *EnvVarsArray) Find(key string) string {
+func (i *TupleArray) Find(key string) string {
 	for _, item := range *i {
 		if item.Key == key {
 			return item.Value

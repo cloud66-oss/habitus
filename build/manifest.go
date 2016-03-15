@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/cloud66/habitus/configuration"
+	"github.com/cloud66/habitus/secrets"
 
 	"gopkg.in/yaml.v2"
 )
@@ -25,6 +26,13 @@ type Cleanup struct {
 	Commands []string
 }
 
+// holds a single secret
+type Secret struct {
+	Name  string
+	Type  string
+	Value string
+}
+
 // Step Holds a single step in the build process
 // Public structs. They are used to store the build for the builders
 type Step struct {
@@ -36,12 +44,14 @@ type Step struct {
 	Cleanup    *Cleanup
 	DependsOn  []*Step
 	Command    string
+	Secrets    []Secret
 }
 
 // Manifest Holds the whole build process
 type Manifest struct {
-	Steps        []Step
-	IsPrivileged bool
+	Steps           []Step
+	IsPrivileged    bool
+	SecretProviders map[string]secrets.SecretProvider
 
 	buildLevels [][]Step
 }
@@ -50,14 +60,20 @@ type cleanup struct {
 	Commands []string `yaml:"commands"`
 }
 
+type secret struct {
+	Type  string `yaml:"type"`
+	Value string `yaml:"value"`
+}
+
 // Private structs. They are used to load from yaml
 type step struct {
-	Name       string   `yaml:"name"`
-	Dockerfile string   `yaml:"dockerfile"`
-	Artefacts  []string `yaml:"artifacts"`
-	Cleanup    *cleanup `yaml:"cleanup"`
-	DependsOn  []string `yaml:"depends_on"`
-	Command    string   `yaml:"command"`
+	Name       string            `yaml:"name"`
+	Dockerfile string            `yaml:"dockerfile"`
+	Artefacts  []string          `yaml:"artifacts"`
+	Cleanup    *cleanup          `yaml:"cleanup"`
+	DependsOn  []string          `yaml:"depends_on"`
+	Command    string            `yaml:"command"`
+	Secrets    map[string]secret `yaml:"secrets"`
 }
 
 // This is loaded from the build.yml file
@@ -93,15 +109,19 @@ func LoadBuildFromFile(config *configuration.Config) (*Manifest, error) {
 
 	// check the version. for now we are going to support only one version
 	// in future, version will select the parser
-	if n.BuildConfig.Version != "2016-02-13" {
+	if (n.BuildConfig.Version != "2016-02-13") && (n.BuildConfig.Version != "2016-03-14") {
 		return nil, errors.New("Invalid build schema version")
 	}
 
-	return n.convertToBuild()
+	return n.convertToBuild(n.BuildConfig.Version)
 }
 
-func (n *namespace) convertToBuild() (*Manifest, error) {
-	r := Manifest{}
+func (n *namespace) convertToBuild(version string) (*Manifest, error) {
+	r := Manifest{
+		SecretProviders: make(map[string]secrets.SecretProvider),
+	}
+	r.SecretProviders["file"] = &secrets.FileProvider{}
+
 	r.IsPrivileged = false
 	r.Steps = []Step{}
 
@@ -119,6 +139,21 @@ func (n *namespace) convertToBuild() (*Manifest, error) {
 			r.IsPrivileged = true
 		} else {
 			convertedStep.Cleanup = &Cleanup{}
+		}
+
+		// TODO: should done through proper schema validation
+		if version == "2016-03-14" {
+			for name, s := range s.Secrets {
+				convertedSecret := Secret{}
+				convertedSecret.Name = name
+				convertedSecret.Type = s.Type
+				convertedSecret.Value = s.Value
+
+				// TODO: check for invalid type
+				r.SecretProviders[s.Type].RegisterSecret(name, s.Value)
+
+				convertedStep.Secrets = append(convertedStep.Secrets, convertedSecret)
+			}
 		}
 
 		for _, a := range s.Artefacts {
