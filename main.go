@@ -36,13 +36,13 @@ func main() {
 	args := os.Args[1:]
 	defer bugsnag.AutoNotify()
 
-	var log = logging.MustGetLogger("cxbuilder")
+	var log = logging.MustGetLogger("habitus")
 	logging.SetFormatter(format)
 
 	config := configuration.CreateConfig()
 	flag.StringVar(&config.Buildfile, "f", "build.yml", "Build file path. Defaults to build.yml in the workdir")
-	flag.StringVar(&config.Workdir, "d", "", "work directory for this build. Defaults to the current directory")
-	flag.BoolVar(&config.NoCache, "no-cache", false, "Use cache in build")
+	flag.StringVar(&config.Workdir, "d", "", "Work directory for this build. Defaults to the current directory")
+	flag.BoolVar(&config.NoCache, "no-cache", false, "Don't use cache in build")
 	flag.BoolVar(&config.SuppressOutput, "suppress", false, "Suppress build output")
 	flag.BoolVar(&config.RmTmpContainers, "rm", true, "Remove intermediate containers")
 	flag.BoolVar(&config.ForceRmTmpContainer, "force-rm", false, "Force remove intermediate containers")
@@ -50,13 +50,16 @@ func main() {
 	flag.StringVar(&flagLevel, "level", "debug", "Log level: debug, info, notice, warning, error and critical")
 	flag.StringVar(&config.DockerHost, "host", os.Getenv("DOCKER_HOST"), "Docker host link. Uses DOCKER_HOST if missing")
 	flag.StringVar(&config.DockerCert, "certs", os.Getenv("DOCKER_CERT_PATH"), "Docker cert folder. Uses DOCKER_CERT_PATH if missing")
-	flag.Var(&config.EnvVars, "env", "Environment variables to be used during build. If empty cxbuild uses parent process environment variables")
-	flag.BoolVar(&config.KeepSteps, "keep-steps", false, "Keep all stpes. Used for debugging each step")
+	flag.Var(&config.EnvVars, "env", "Environment variables to be used during build. Uses parent process environment variables if empty")
+	flag.Var(&config.BuildArgs, "build", "Build arguments to be used during build.")
+	flag.BoolVar(&config.KeepSteps, "keep-all", false, "Overrides the keep flag for all steps. Used for debugging")
 	flag.BoolVar(&config.NoSquash, "no-cleanup", false, "Skip cleanup commands for this run. Used for debugging")
 	flag.BoolVar(&config.FroceRmImages, "force-rmi", false, "Force remove of unwanted images")
 	flag.BoolVar(&config.NoPruneRmImages, "noprune-rmi", false, "No pruning of unwanted images")
 	flag.BoolVar(&flagShowHelp, "help", false, "Display the help")
 	flag.BoolVar(&flagShowVersion, "version", false, "Display version information")
+	flag.IntVar(&config.ApiPort, "port", 8080, "Port to server the API")
+	flag.StringVar(&config.ApiBinding, "binding", "192.168.99.1", "Network address to bind the API to. (see documentation for more info)")
 
 	config.Logger = *log
 
@@ -82,7 +85,7 @@ func main() {
 		fmt.Println("Invalid log level value. Falling back to debug")
 		level = logging.DEBUG
 	}
-	logging.SetLevel(level, "cxbuilder")
+	logging.SetLevel(level, "habitus")
 
 	if config.Workdir == "" {
 		if curr, err := os.Getwd(); err != nil {
@@ -108,6 +111,15 @@ func main() {
 	}
 
 	b := build.NewBuilder(c, &config)
+
+	// start the API
+	api := &server{builder: b}
+	err = api.StartServer()
+	if err != nil {
+		log.Fatal("Cannot start API server due to %s", err.Error())
+		os.Exit(2)
+	}
+
 	err = b.StartBuild()
 	if err != nil {
 		log.Error("Error during build %s", err.Error())
