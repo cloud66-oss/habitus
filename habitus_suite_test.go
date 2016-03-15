@@ -24,4 +24,6 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = AfterSuite(func() {
+	err := exec.Command("rm", binPath).Run()
+	Expect(err).NotTo(HaveOccurred())
 })
