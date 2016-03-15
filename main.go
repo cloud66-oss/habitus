@@ -59,6 +59,7 @@ func main() {
 	flag.BoolVar(&flagShowHelp, "help", false, "Display the help")
 	flag.BoolVar(&flagShowVersion, "version", false, "Display version information")
 	flag.IntVar(&config.ApiPort, "port", 8080, "Port to server the API")
+	flag.StringVar(&config.ApiBinding, "binding", "192.168.99.1", "Network address to bind the API to. (see documentation for more info)")
 
 	config.Logger = *log
 

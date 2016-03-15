@@ -33,6 +33,7 @@ type Config struct {
 	NoPruneRmImages     bool
 	FroceRmImages       bool
 	ApiPort             int
+	ApiBinding          string
 }
 
 func (i *TupleArray) String() string {

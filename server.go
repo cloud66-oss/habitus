@@ -35,7 +35,7 @@ func (s *server) StartServer() error {
 		s.builder.Conf.Logger.Info("Starting API on %d", s.builder.Conf.ApiPort)
 
 		// 192.168.99.1
-		if err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", s.builder.Conf.ApiPort), api.MakeHandler()); err != nil {
+		if err := http.ListenAndServe(fmt.Sprintf("%s:%d", s.builder.Conf.ApiBinding, s.builder.Conf.ApiPort), api.MakeHandler()); err != nil {
 			s.builder.Conf.Logger.Error("Failed to start API %s", err.Error())
 			os.Exit(2)
 		}
