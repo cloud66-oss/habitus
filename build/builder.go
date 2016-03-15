@@ -169,6 +169,10 @@ func (b *Builder) BuildStep(step *Step) error {
 		return err
 	}
 
+	buildArgs := []docker.BuildArg{}
+	for _, s := range b.Conf.BuildArgs {
+		buildArgs = append(buildArgs, docker.BuildArg{Name: s.Key, Value: s.Value})
+	}
 	// call Docker to build the Dockerfile (from the parsed file)
 	b.Conf.Logger.Debug("Building the image from %s", filepath.Base(b.uniqueDockerfile(step)))
 	opts := docker.BuildImageOptions{
@@ -180,6 +184,7 @@ func (b *Builder) BuildStep(step *Step) error {
 		ForceRmTmpContainer: b.Conf.ForceRmTmpContainer,
 		OutputStream:        os.Stdout, // TODO: use a multi writer to get a stream out for the API
 		ContextDir:          b.Conf.Workdir,
+		BuildArgs:           buildArgs,
 	}
 
 	if b.auth != nil {
@@ -389,13 +394,12 @@ func (b *Builder) BuildStep(step *Step) error {
 		if step.Command != "" {
 			b.Conf.Logger.Notice("Starting container %s to run commands", container.ID)
 			startOpts := &docker.HostConfig{}
-			
+
 			err := b.docker.StartContainer(container.ID, startOpts)
 			if err != nil {
 				return err
 			}
 
-		
 			execOpts := docker.CreateExecOptions{
 				Container:    container.ID,
 				AttachStdin:  false,
@@ -418,19 +422,17 @@ func (b *Builder) BuildStep(step *Step) error {
 			}
 
 			b.Conf.Logger.Notice("Running command %s on container %s", execOpts.Cmd, container.ID)
-			
-			
+
 			if err := b.docker.StartExec(execObj.ID, startExecOpts); err != nil {
 				b.Conf.Logger.Error("Failed to execute command '%s' due to %s", step.Command, err.Error())
 			}
 
 			b.Conf.Logger.Notice("\n%s", buf)
-			
 
 			inspect, err := b.docker.InspectExec(execObj.ID)
 			if err != nil {
 				return err
-			}	
+			}
 
 			if inspect.ExitCode != 0 {
 				b.Conf.Logger.Error("Running command %s on container %s exit with exit code %d", execOpts.Cmd, container.ID, inspect.ExitCode)
