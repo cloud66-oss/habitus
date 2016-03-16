@@ -308,6 +308,15 @@ a {
     }
   }
 
+  .YouTube1{
+    margin-top:20px;
+  }
+  @media screen and (max-width: 42em) {
+    .YouTube1{
+      display: none;
+    }
+  }
+
   .articles{
     margin: 45px;
     text-align: center;
