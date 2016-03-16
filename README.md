@@ -56,6 +56,7 @@ Here is a list of all step elements:
 -   `name:` Name of the generated image
 -   `dockerfile:` Dockerfile used to build the step
 -   `artifacts:` List of all files to be copied out of the image once it’s built. See below
+-   `secrets`: List of all secrets available to the build process. See below
 -   `cleanup:` List of all cleanup steps to run on the image once the step is finished. See below
 -   `depends_on:`Lists all the steps this step depends on (and should be built prior to this step’s build)
 -   `command:`A command that will run in the running container after it’s built
