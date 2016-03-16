@@ -17,7 +17,7 @@ import (
 	"time"
 
 	"github.com/cloud66/habitus/configuration"
-	"github.com/docker/docker/pkg/units"
+	"github.com/docker/go-units"
 )
 
 type TagInfo map[string]string

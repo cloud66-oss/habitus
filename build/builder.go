@@ -99,8 +99,8 @@ func NewBuilder(manifest *Manifest, conf *configuration.Config) *Builder {
 // StartBuild runs the build process end to end
 func (b *Builder) StartBuild() error {
 	b.Conf.Logger.Debug("Building %d steps", len(b.Build.Steps))
-	for name, _ := range b.Build.Steps {
-		b.Conf.Logger.Debug("Step %s", name)
+	for i, s := range b.Build.Steps {
+		b.Conf.Logger.Debug("Step %d - %s: %s", i, s.Label, s.Name)
 	}
 
 	for _, levels := range b.Build.buildLevels {
@@ -169,6 +169,10 @@ func (b *Builder) BuildStep(step *Step) error {
 		return err
 	}
 
+	buildArgs := []docker.BuildArg{}
+	for _, s := range b.Conf.BuildArgs {
+		buildArgs = append(buildArgs, docker.BuildArg{Name: s.Key, Value: s.Value})
+	}
 	// call Docker to build the Dockerfile (from the parsed file)
 	b.Conf.Logger.Debug("Building the image from %s", filepath.Base(b.uniqueDockerfile(step)))
 	opts := docker.BuildImageOptions{
@@ -180,6 +184,7 @@ func (b *Builder) BuildStep(step *Step) error {
 		ForceRmTmpContainer: b.Conf.ForceRmTmpContainer,
 		OutputStream:        os.Stdout, // TODO: use a multi writer to get a stream out for the API
 		ContextDir:          b.Conf.Workdir,
+		BuildArgs:           buildArgs,
 	}
 
 	if b.auth != nil {
@@ -261,7 +266,7 @@ func (b *Builder) BuildStep(step *Step) error {
 				return err
 			}
 
-			tmpFile, err := ioutil.TempFile("", "cxbuild-export-")
+			tmpFile, err := ioutil.TempFile("", "habitus-export-")
 			if err != nil {
 				return err
 			}
@@ -284,7 +289,7 @@ func (b *Builder) BuildStep(step *Step) error {
 			}
 
 			// Squash
-			sqTmpFile, err := ioutil.TempFile("", "cxbuild-export-")
+			sqTmpFile, err := ioutil.TempFile("", "habitus-export-")
 			if err != nil {
 				return err
 			}
@@ -389,6 +394,7 @@ func (b *Builder) BuildStep(step *Step) error {
 		if step.Command != "" {
 			b.Conf.Logger.Notice("Starting container %s to run commands", container.ID)
 			startOpts := &docker.HostConfig{}
+
 			err := b.docker.StartContainer(container.ID, startOpts)
 			if err != nil {
 				return err
@@ -399,7 +405,7 @@ func (b *Builder) BuildStep(step *Step) error {
 				AttachStdin:  false,
 				AttachStdout: true,
 				AttachStderr: true,
-				Tty:          false,
+				Tty:          true,
 				Cmd:          strings.Split(step.Command, " "),
 			}
 			execObj, err := b.docker.CreateExec(execOpts)
@@ -411,12 +417,28 @@ func (b *Builder) BuildStep(step *Step) error {
 			startExecOpts := docker.StartExecOptions{
 				OutputStream: buf,
 				ErrorStream:  os.Stderr,
-				RawTerminal:  false,
+				RawTerminal:  true,
 				Detach:       false,
 			}
 
+			b.Conf.Logger.Notice("Running command %s on container %s", execOpts.Cmd, container.ID)
+
 			if err := b.docker.StartExec(execObj.ID, startExecOpts); err != nil {
 				b.Conf.Logger.Error("Failed to execute command '%s' due to %s", step.Command, err.Error())
+			}
+
+			b.Conf.Logger.Notice("\n%s", buf)
+
+			inspect, err := b.docker.InspectExec(execObj.ID)
+			if err != nil {
+				return err
+			}
+
+			if inspect.ExitCode != 0 {
+				b.Conf.Logger.Error("Running command %s on container %s exit with exit code %d", execOpts.Cmd, container.ID, inspect.ExitCode)
+				return err
+			} else {
+				b.Conf.Logger.Notice("Running command %s on container %s exit with exit code %d", execOpts.Cmd, container.ID, inspect.ExitCode)
 			}
 
 			b.Conf.Logger.Debug("Stopping the container %s", container.ID)
