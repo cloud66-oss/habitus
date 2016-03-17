@@ -16,11 +16,15 @@ Habitus uses a yml file as a descriptor for builds. Here is an example:
 ``` yaml
   
 build:
-  version: 2016-02-13 // version of the build schema. 
+  version: 2016-03-14 # version of the build schema.
   steps:
-    - builder:
+    builder:
       name: builder
       dockerfile: Dockerfile.builder
+      secrets:
+        id_rsa:
+          type: file
+          value: _env(HOME)/.ssh/my_private_key
       artifacts:
         - /go/src/github.com/cloud66/iron-mountain/iron-mountain
         - /go/src/github.com/cloud66/iron-mountain/config.json
@@ -29,18 +33,18 @@ build:
       cleanup:
         commands:
           - rm -rf /root/.ssh/
-    - deployment:
+    deployment:
       name: ironmountain
       dockerfile: Dockerfile.deployment
       depends_on:
         - builder
-    - uploader:
+    uploader:
       name: uploader
       dockerfile: Dockerfile.uploader
       depends_on:
         - ironmountain
-      command: s3cmd --access_key=_env(ACCESS_KEY) --secret_key=_env(SECRET_KEY) put /app/iron-mountain s3://uploads.aws.com
-  
+      command: s3cmd --access_key=_env(ACCESS_KEY) --secret_key=_env(SECRET_KEY) put /app/iron-mountain s3://uploads.aws.com  
+      
 ```
 
 Build files can be made up of multiple steps. Each step is independent of the other ones and downstream steps can use upstream ones as source (in `FROM` command).
@@ -52,6 +56,7 @@ Here is a list of all step elements:
 -   `name:` Name of the generated image
 -   `dockerfile:` Dockerfile used to build the step
 -   `artifacts:` List of all files to be copied out of the image once it’s built. See below
+-   `secrets`: List of all secrets available to the build process. See below
 -   `cleanup:` List of all cleanup steps to run on the image once the step is finished. See below
 -   `depends_on:`Lists all the steps this step depends on (and should be built prior to this step’s build)
 -   `command:`A command that will run in the running container after it’s built
@@ -78,6 +83,88 @@ Here is an example that uses an artefact generated in step `builder`
         FROM ubuntu
         ADD ./iron-mountain /app/iron-mountain
       
+#### Secrets
+Managing secrets during a Docker build is tricky. You have might need to clone a private git repository as part of your build process and will need to have your private SSH key in the image before that. But that's not a good idea. Here is why:
+
+First of all, you will need to copy your private SSH key to your build context, moving it out of your home directory and leaving it exposed to accidental commits to your Git repo.
+
+Secondly you will end up with the key in the image (unless you use the <code>cleanup</code> step with Habitus, see below). Which will be in the image forever.
+
+Third issue is that you will end up sharing SSH keys even if you decided to take the risk and add SSH keys to the image but squash them later.
+
+Habits can help you in this case by using `secrets`
+
+Habitus has an internal web server. This webserver only serves to requests comming from inside of the building containers. Building containers can ask for "secrets" during build with a simple <code>wget</code> or <code>curl</code>. The secret is delivered to the build process which can be used and removed in the same layer leaving no trace in the image.
+
+Here is an example:
+
+```
+# Optional steps to take care of git and Github protocol and server fingerprint issues
+RUN git config --global url."git@github.com:".insteadOf "https://github.com/"
+RUN ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+
+# using Secrets
+ARG host
+RUN wget -O ~/.ssh/id_rsa http://$host:8080/v1/secrets/file/id_rsa && chmod 0600 ~/.ssh/id_rsa && ssh -T git@github.com && rm ~/.ssh/id_rsa
+
+```
+
+This is a snippet from a sample Dockerfile that uses the <code>secrets</code> feature of Habitus.
+
+First, we make sure all git requests to Github go through the git protocol rather than HTTP (this is optional)
+
+Second, we are going to add Github's server fingerprint to our <code>known_hosts</code> file to avoid the "yes/no" prompt
+
+Now we can use Habitus and pull our private SSH key as a secret. It will be stored in <code>~/.ssh/id_rsa</code> and the next commands will use it (<code>ssh -T git@github.com</code> is a test that it worked) and the last step (very important) is removing it from the image with no traces and no need to use <code>cleanup</code>.
+
+You notice that here we are using the Build Arguments in the Dockerfile with <code>ARG</code>. This allows us to pass in the Habitus IP address into the container without saving it into the image. You can pass in Build Arguments into Habitus with <code>--build</code> parameter:
+
+<p><kbd>$ habitus --build host=192.168.99.1</kbd></p>
+
+##### Secret configuration
+
+<p><b>IMPORTANT</b>: Secrets are supported in Habitus 0.4 onward and only with <code>build.yml</code> schema versions on or more recent than <code>2016-03-14</code>.</p>
+
+<p>You can define as many secrets for your build. Each secret has 3 attributes:</p>
+
+<ul>
+  <li>Name: Name is what the build will refer to this secret as. In this example the name is <code>id_rsa</code></li>
+  <li>Type: Currently only <code>file</code> is supported as <code>type</code> which means Habitus only supports secrets stored in a file.</li>
+  <li>Value: Value depends on the <code>type</code>. For <code>file</code>, <code>value</code> is the path to the file holding the secret on the build host (ie. your laptop or build server).</li>
+</ul>
+
+<pre>
+  <code>
+secrets:
+        id_rsa:
+          type: file
+          value: _env(HOME)/.ssh/my_private_key
+  </code>
+</pre>
+
+
+<h5>Habitus IP address</h5>
+<p>Finding the correct IP address to server Habitus API (and secrets) on can be tricky. You don't want to bind it to <code>0.0.0.0</code> since it will make Habitus and your secrets available to your entire local network (and possibly the internet if you're running a tunnel) during the build time.</p>
+<p>On a Linux machine where Docker can run natively you can bind Habitus to <code>127.0.0.1</code>. However on a Mac (OSX) Docker runs inside of a VM (VirtualBox in most cases thorugh Boot2Docker). This means you need to find the VM address of your Mac and use that to bind Habitus to. By default, Boot2Docker (and Docker Machine) use <code>192.168.99.1</code> which is what Habitus uses by default.</p>
+<p>You can find your VM address by the following command:</p>
+<p><kbd>$ ifconfig -a</kbd></p>
+
+<p>What you are looking for is the <code>inet</code> address of a <code>vboxnet</code> like the following:</p>
+
+<pre>
+  <code>
+    vboxnet3: flags=8943<UP,BROADCAST,RUNNING,PROMISC,SIMPLEX,MULTICAST> mtu 1500
+    	ether 0a:00:27:00:00:03
+    	inet 192.168.99.1 netmask 0xffffff00 broadcast 192.168.99.255
+  </code>
+</pre>
+
+<p>On a Mac, if your VM IP address is different from <code>192.168.99.1</code> you can configure Habitus using the <code>--binding</code> parameter:</p>
+
+<p><kbd>$ habitus --binding 10.0.99.1</kbd></p>
+
+<p>You can also change the Habitus API port from the default <code>8080</code> using the <code>--port</code> parameter.</p>
+
 
 #### Cleanup
 
@@ -160,10 +247,12 @@ Habitus accepts the following command line parameters:
 -   `host`: Address for Docker daemon to run the build. Defaults to the value of `$DOCKER_HOST`.
 -   `certs`: Path of the key and cert files used to connect to the Docker daemon. Defaults to `$DOCKER_CERT_PATH`
 -   `env`: Environment variables used in the build process. If not specified Habitus inherits all environment variables of the parent process.
--   `keep-all`: Overrides the keep flag for all steps so you can inspect and debug the created images of each step without changing the build file.
 -   `no-cleanup`: Don’t run cleanup commands. This can be used for debugging and removes the need to run as sudo
 -   `force-rmi`: Forces removal of unwanted images after the build
 -   `noprune-rmi`: Doesn’t prune unwanted images after the build
+-   `build`: Dockerfile Build Arguments passed into the build process
+-   `binding`: IP address to bind Habitus API to. Habitus API provides services like secrets to the building containers. Default is `192.168.99.1`
+-   `port`: Port to server Habitus API on. Default is `8080`
 
 #### Development Environment for Habitus
 
