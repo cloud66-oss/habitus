@@ -286,6 +286,8 @@ artifacts:
 <li><code>build</code>: Dockerfile Build Arguments passed into the build process</li>
 <li><code>binding</code>: IP address to bind Habitus API to. Habitus API provides services like secrets to the building containers. Default is <code>192.168.99.1</code></li>
 <li><code>port</code>: Port to server Habitus API on. Default is <code>8080</code></li>
+<li><code>secrets</code>: Enable or disable support for secrets during build. Default is <code>true</code></li>
+<li><code>sec-providers</code>: Comma separated list of secret provider types available during the build. Default is <code>file</code></li>
 </ul>
 
 <h4>Development Environment for Habitus</h4>
@@ -306,7 +308,7 @@ artifacts:
 <p>Habitus supports multi-tenancy of builds by using a <code>uid</code> parameter.</p>
 <p>All builds and images will be tagged with the <code>uid</code> for this unless a step name explicitly has a tag. In that case the tag is concatenated with the <code>-uid</code>.</p>
 
- 
+
 <h4 class="YouTube1">More about Habitus</h4>
 <p class="YouTube"><iframe width="560" height="315" src="https://www.youtube.com/embed/knIdorbr5L8" frameborder="0" allowfullscreen></iframe></p>
 <p class="articles">Read more <a href="http://blog.cloud66.com/tag/habitus/">articles about Habitus.</a></p>
