@@ -38,7 +38,7 @@ func (notifier *Notifier) Notify(err error, rawData ...interface{}) (e error) {
 
 	// Never block, start throwing away errors if we have too many.
 	e = middleware.Run(event, config, func() error {
-		config.log("notifying bugsnag: %s", event.Message)
+		config.logf("notifying bugsnag: %s", event.Message)
 		if config.notifyInReleaseStage() {
 			if config.Synchronous {
 				return (&payload{event, config}).deliver()
@@ -47,7 +47,7 @@ func (notifier *Notifier) Notify(err error, rawData ...interface{}) (e error) {
 			go func(event *Event, config *Configuration) {
 				err := (&payload{event, config}).deliver()
 				if err != nil {
-					config.log("bugsnag.Notify: %v", err)
+					config.logf("bugsnag.Notify: %v", err)
 				}
 			}(event, config)
 
@@ -57,7 +57,7 @@ func (notifier *Notifier) Notify(err error, rawData ...interface{}) (e error) {
 	})
 
 	if e != nil {
-		config.log("bugsnag.Notify: %v", e)
+		config.logf("bugsnag.Notify: %v", e)
 	}
 	return e
 }
@@ -85,7 +85,7 @@ func (notifier *Notifier) Recover(rawData ...interface{}) {
 
 func (notifier *Notifier) dontPanic() {
 	if err := recover(); err != nil {
-		notifier.Config.log("bugsnag/notifier.Notify: panic! %s", err)
+		notifier.Config.logf("bugsnag/notifier.Notify: panic! %s", err)
 	}
 }
 
