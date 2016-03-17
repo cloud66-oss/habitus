@@ -17,7 +17,7 @@ var prettyFormat = logging.MustStringFormatter(
 	"%{color}▶ %{message} %{color:reset}",
 )
 var plainFormat = logging.MustStringFormatter(
-	"> %{message}",
+	"[%{level:-8s}] - %{message}",
 )
 
 var (
@@ -71,7 +71,6 @@ func main() {
 
 	if flagPrettyLog {
 		logging.SetFormatter(prettyFormat)
-		// config.Logger = *log
 	}
 
 	if flagShowHelp || (len(args) > 0 && args[0] == "help") {
@@ -125,12 +124,12 @@ func main() {
 	api := &server{builder: b}
 	err = api.StartServer()
 	if err != nil {
-		log.Fatal("Cannot start API server due to %s", err.Error())
+		log.Fatalf("Cannot start API server due to %s", err.Error())
 		os.Exit(2)
 	}
 
 	err = b.StartBuild()
 	if err != nil {
-		log.Error("Error during build %s", err.Error())
+		log.Errorf("Error during build %s", err.Error())
 	}
 }
