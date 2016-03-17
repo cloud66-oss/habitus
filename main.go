@@ -60,6 +60,8 @@ func main() {
 	flag.BoolVar(&flagShowVersion, "version", false, "Display version information")
 	flag.IntVar(&config.ApiPort, "port", 8080, "Port to server the API")
 	flag.StringVar(&config.ApiBinding, "binding", "192.168.99.1", "Network address to bind the API to. (see documentation for more info)")
+	flag.BoolVar(&config.SecretService, "secrets", true, "Turn Secrets Service on or off")
+	flag.StringVar(&config.SecretProviders, "sec-providers", "file", "All available secret providers. Comma separated")
 
 	config.Logger = *log
 
@@ -112,12 +114,14 @@ func main() {
 
 	b := build.NewBuilder(c, &config)
 
-	// start the API
-	api := &server{builder: b}
-	err = api.StartServer()
-	if err != nil {
-		log.Fatal("Cannot start API server due to %s", err.Error())
-		os.Exit(2)
+	if config.SecretService {
+		// start the API
+		api := &server{builder: b}
+		err = api.StartServer()
+		if err != nil {
+			log.Fatal("Cannot start API server due to %s", err.Error())
+			os.Exit(2)
+		}
 	}
 
 	err = b.StartBuild()

@@ -14,6 +14,10 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+var (
+	validTypes = []string{"file"}
+)
+
 // Artefact holds a parsed source for a build artefact
 type Artefact struct {
 	Step   Step
@@ -149,7 +153,13 @@ func (n *namespace) convertToBuild(version string) (*Manifest, error) {
 				convertedSecret.Type = s.Type
 				convertedSecret.Value = s.Value
 
-				// TODO: check for invalid type
+				if !stringInSlice(s.Type, validTypes) {
+					return nil, fmt.Errorf("Invalid type %s'", s.Type)
+				}
+				if !stringInSlice(s.Type, strings.Split(n.Config.SecretProviders, ",")) {
+					return nil, fmt.Errorf("Unsupported type '%s'", s.Type)
+				}
+
 				r.SecretProviders[s.Type].RegisterSecret(name, s.Value)
 
 				convertedStep.Secrets = append(convertedStep.Secrets, convertedSecret)
@@ -312,4 +322,13 @@ func parseForEnvVars(config *configuration.Config, value []byte) []byte {
 	})
 
 	return matched
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }
