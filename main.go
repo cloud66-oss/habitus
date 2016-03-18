@@ -17,7 +17,7 @@ var prettyFormat = logging.MustStringFormatter(
 	"%{color}▶ %{message} %{color:reset}",
 )
 var plainFormat = logging.MustStringFormatter(
-	"[%{level:-8s}] - %{message}",
+	"[%{level}] - %{message}",
 )
 
 var (
