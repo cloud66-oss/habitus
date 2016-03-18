@@ -95,7 +95,7 @@ type namespace struct {
 
 // LoadBuildFromFile loads Build from a yaml file
 func LoadBuildFromFile(config *configuration.Config) (*Manifest, error) {
-	config.Logger.Notice("Using '%s' as build file", config.Buildfile)
+	config.Logger.Noticef("Using '%s' as build file", config.Buildfile)
 
 	n := namespace{Config: config}
 

@@ -1,5 +1,7 @@
-Bugsnag Notifier for Golang
-===========================
+# Bugsnag Notifier for Golang
+[![Latest Version](http://img.shields.io/github/release/bugsnag/bugsnag-go.svg?style=flat-square)](https://github.com/bugsnag/bugsnag-go/releases)
+[![Build Status](https://travis-ci.org/bugsnag/bugsnag-go.svg)](https://travis-ci.org/bugsnag/bugsnag-go)
+[![Go Documentation](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](http://godoc.org/github.com/bugsnag/bugsnag-go)
 
 The Bugsnag Notifier for Golang gives you instant notification of panics, or
 unexpected errors, in your golang app. Any unhandled panics will trigger a
@@ -361,6 +363,8 @@ bugsnag.Configure(bugsnag.Configuration{
 In order to determine where a crash happens Bugsnag needs to know which packages you consider to
 be part of your app (as opposed to a library). By default this is set to `[]string{"main*"}`. Strings
 are matched to package names using [`filepath.Match`](http://godoc.org/path/filepath#Match).
+
+For matching subpackages within a package you may use the `**` notation. For example, `github.com/domain/package/**` will match all subpackages under `package/`.
 
 ```go
 bugsnag.Configure(bugsnag.Configuration{

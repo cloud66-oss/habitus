@@ -3,8 +3,8 @@
 package bugsnag
 
 import (
-	"github.com/bugsnag/panicwrap"
 	"github.com/bugsnag/bugsnag-go/errors"
+	"github.com/bugsnag/panicwrap"
 )
 
 // NOTE: this function does not return when you call it, instead it
@@ -16,12 +16,12 @@ func defaultPanicHandler() {
 		toNotify, err := errors.ParsePanic(output)
 
 		if err != nil {
-			defaultNotifier.Config.log("bugsnag.handleUncaughtPanic: %v", err)
+			defaultNotifier.Config.logf("bugsnag.handleUncaughtPanic: %v", err)
 		}
 		Notify(toNotify, SeverityError, Configuration{Synchronous: true})
 	})
 
 	if err != nil {
-		defaultNotifier.Config.log("bugsnag.handleUncaughtPanic: %v", err)
+		defaultNotifier.Config.logf("bugsnag.handleUncaughtPanic: %v", err)
 	}
 }

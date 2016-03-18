@@ -36,13 +36,13 @@
 		},
 		{
 			"ImportPath": "github.com/docker/docker/builder/dockerfile/command",
-			"Comment": "v1.4.1-10811-gc5aedcd",
-			"Rev": "c5aedcdac9c30e764c22d1be1dd2c08c52c74fcc"
+			"Comment": "v1.4.1-10902-g8bbe3de",
+			"Rev": "8bbe3de4b3cd951719120e47b4f97653c11566f7"
 		},
 		{
 			"ImportPath": "github.com/docker/docker/builder/dockerfile/parser",
-			"Comment": "v1.4.1-10811-gc5aedcd",
-			"Rev": "c5aedcdac9c30e764c22d1be1dd2c08c52c74fcc"
+			"Comment": "v1.4.1-10902-g8bbe3de",
+			"Rev": "8bbe3de4b3cd951719120e47b4f97653c11566f7"
 		},
 		{
 			"ImportPath": "github.com/docker/go-units",
