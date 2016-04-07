@@ -209,7 +209,7 @@ This will be replaced before the build file is fed into the build engine. By def
 
 In the example above, you can pass in AWS S3 key and secret like this:
 
-<kbd>$ habitus -env ACCESS\_KEY=\(ACCESS_KEY -env SECRET_KEY=\)SECRET\_KEY</kbd>
+<kbd>$ habitus -env ACCESS\_KEY=ACCESS_KEY -env SECRET_KEY=SECRET\_KEY</kbd>
 
 #### Running commands
 
