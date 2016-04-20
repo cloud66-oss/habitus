@@ -2,7 +2,7 @@
 Habitus
 =======
 
-![Codeship Status for cloud66/habitus](https://codeship.com/projects/714284d0-e914-0133-1e5d-4eaa3299b296/status?branch=master)]
+![Codeship Status for cloud66/habitus](https://codeship.com/projects/714284d0-e914-0133-1e5d-4eaa3299b296/status)
 
 A Docker Build Flow Tool
 ------------------------
