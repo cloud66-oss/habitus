@@ -141,9 +141,9 @@ func LoadExport(conf *configuration.Config, image, location string) (*Export, er
 	}
 
 	if image == "" {
-		conf.Logger.Debug("Loading export from STDIN using %s for tempdir", location)
+		conf.Logger.Debugf("Loading export from STDIN using %s for tempdir", location)
 	} else {
-		conf.Logger.Debug("Loading export from %s using %s for tempdir", image, location)
+		conf.Logger.Debugf("Loading export from %s using %s for tempdir", image, location)
 	}
 
 	ir := os.Stdin
@@ -192,9 +192,9 @@ func LoadExport(conf *configuration.Config, image, location string) (*Export, er
 		return nil, err
 	}
 
-	conf.Logger.Debug("Loaded image w/ %s layers", strconv.FormatInt(int64(len(export.Entries)), 10))
+	conf.Logger.Debugf("Loaded image w/ %s layers", strconv.FormatInt(int64(len(export.Entries)), 10))
 	for repo, tags := range export.Repositories {
-		conf.Logger.Debug("  -  %s (%s tags)", repo, strconv.FormatInt(int64(len(*tags)), 10))
+		conf.Logger.Debugf("  -  %s (%s tags)", repo, strconv.FormatInt(int64(len(*tags)), 10))
 	}
 	return export, err
 }
@@ -252,7 +252,7 @@ func (e *Export) ExtractLayers() error {
 	e.conf.Logger.Debug("Extracting layers...")
 
 	for _, entry := range e.Entries {
-		e.conf.Logger.Debug("  -  %s", entry.LayerTarPath)
+		e.conf.Logger.Debugf("  -  %s", entry.LayerTarPath)
 		err := entry.ExtractLayerDir()
 		if err != nil {
 			return err
@@ -355,7 +355,7 @@ func (e *Export) PrintHistory() {
 			cmd = cmd[0:57] + "..."
 		}
 
-		e.conf.Logger.Debug("  - %s %s %s %s", order[i].LayerConfig.Id[0:12],
+		e.conf.Logger.Debugf("  - %s %s %s %s", order[i].LayerConfig.Id[0:12],
 			humanDuration(time.Now().UTC().Sub(order[i].LayerConfig.Created.UTC())),
 			cmd, units.HumanSize(float64(size)))
 	}
@@ -422,7 +422,7 @@ func (e *Export) ReplaceLayer(oldId string) (*ExportedImage, error) {
 		cmd = cmd[:47] + "..."
 	}
 
-	e.conf.Logger.Debug("  -  Replacing %s w/ new layer %s (%s)", oldId[:12], id[:12], cmd)
+	e.conf.Logger.Debugf("  -  Replacing %s w/ new layer %s (%s)", oldId[:12], id[:12], cmd)
 	if child != nil {
 		child.LayerConfig.Parent = id
 		err = child.WriteJson()
@@ -474,7 +474,7 @@ func (e *Export) ReplaceLayer(oldId string) (*ExportedImage, error) {
 
 func (e *Export) SquashLayers(to, from *ExportedImage) error {
 
-	e.conf.Logger.Debug("Squashing from %s into %s", from.LayerConfig.Id[:12], to.LayerConfig.Id[:12])
+	e.conf.Logger.Debugf("Squashing from %s into %s", from.LayerConfig.Id[:12], to.LayerConfig.Id[:12])
 	layerDir := filepath.Join(to.Path, "layer")
 	err := os.MkdirAll(layerDir, 0755)
 	if err != nil {
@@ -601,7 +601,7 @@ func (e *Export) rewriteChildren(entry *ExportedImage) error {
 
 			entry = e.ChildOf(newEntry.LayerConfig.Id)
 		} else {
-			e.conf.Logger.Debug("  -  Removing %s. Squashed. (%s)", entry.LayerConfig.Id[:12], cmd)
+			e.conf.Logger.Debugf("  -  Removing %s. Squashed. (%s)", entry.LayerConfig.Id[:12], cmd)
 			err := os.RemoveAll(entry.Path)
 			if err != nil {
 				return err

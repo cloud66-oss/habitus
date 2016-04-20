@@ -3,16 +3,6 @@ Package uniuri
 
 [![Build Status](https://travis-ci.org/dchest/uniuri.svg)](https://travis-ci.org/dchest/uniuri)
 
-Stable version
---------------
-
-**A stable version of this package with commercial support is available
-through StableLib: <https://stablelib.com/v1/uniuri/>**
-
-
-Development version
--------------------
-
 ```go
 import "github.com/dchest/uniuri"
 ```
@@ -104,3 +94,4 @@ The author(s) have dedicated all copyright and related and
 neighboring rights to this software to the public domain
 worldwide. Distributed without any warranty.
 http://creativecommons.org/publicdomain/zero/1.0/
+

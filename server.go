@@ -32,11 +32,11 @@ func (s *server) StartServer() error {
 	api.SetApp(router)
 
 	go func() {
-		s.builder.Conf.Logger.Info("Starting API on %d", s.builder.Conf.ApiPort)
+		s.builder.Conf.Logger.Infof("Starting API on %d", s.builder.Conf.ApiPort)
 
 		// 192.168.99.1
 		if err := http.ListenAndServe(fmt.Sprintf("%s:%d", s.builder.Conf.ApiBinding, s.builder.Conf.ApiPort), api.MakeHandler()); err != nil {
-			s.builder.Conf.Logger.Error("Failed to start API %s", err.Error())
+			s.builder.Conf.Logger.Errorf("Failed to start API %s", err.Error())
 			os.Exit(2)
 		}
 

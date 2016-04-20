@@ -98,16 +98,16 @@ func NewBuilder(manifest *Manifest, conf *configuration.Config) *Builder {
 
 // StartBuild runs the build process end to end
 func (b *Builder) StartBuild() error {
-	b.Conf.Logger.Debug("Building %d steps", len(b.Build.Steps))
+	b.Conf.Logger.Debugf("Building %d steps", len(b.Build.Steps))
 	for i, s := range b.Build.Steps {
-		b.Conf.Logger.Debug("Step %d - %s: %s", i, s.Label, s.Name)
+		b.Conf.Logger.Debugf("Step %d - %s: %s", i, s.Label, s.Name)
 	}
 
 	for _, levels := range b.Build.buildLevels {
 		for _, s := range levels {
 			b.wg.Add(1)
 			go func(st Step) {
-				b.Conf.Logger.Debug("Parallel build for %s", st.Name)
+				b.Conf.Logger.Debugf("Parallel build for %s", st.Name)
 				defer b.wg.Done()
 
 				err := b.BuildStep(&st)
@@ -131,7 +131,7 @@ func (b *Builder) StartBuild() error {
 	// Clear after yourself: images, containers, etc (optional for premium users)
 	// except last step
 	for _, s := range b.Build.Steps[:len(b.Build.Steps)-1] {
-		b.Conf.Logger.Debug("Removing unwanted image %s", b.uniqueStepName(&s))
+		b.Conf.Logger.Debugf("Removing unwanted image %s", b.uniqueStepName(&s))
 		rmiOptions := docker.RemoveImageOptions{Force: b.Conf.FroceRmImages, NoPrune: b.Conf.NoPruneRmImages}
 		err := b.docker.RemoveImageExtended(b.uniqueStepName(&s), rmiOptions)
 		if err != nil {
@@ -162,7 +162,7 @@ func (b *Builder) uniqueStepName(step *Step) string {
 
 // BuildStep builds a single step
 func (b *Builder) BuildStep(step *Step) error {
-	b.Conf.Logger.Notice("Building %s", step.Name)
+	b.Conf.Logger.Noticef("Building %s", step.Name)
 	// fix the Dockerfile
 	err := b.replaceFromField(step)
 	if err != nil {
@@ -174,7 +174,7 @@ func (b *Builder) BuildStep(step *Step) error {
 		buildArgs = append(buildArgs, docker.BuildArg{Name: s.Key, Value: s.Value})
 	}
 	// call Docker to build the Dockerfile (from the parsed file)
-	b.Conf.Logger.Debug("Building the image from %s", filepath.Base(b.uniqueDockerfile(step)))
+	b.Conf.Logger.Debugf("Building the image from %s", filepath.Base(b.uniqueDockerfile(step)))
 	opts := docker.BuildImageOptions{
 		Name:                b.uniqueStepName(step),
 		Dockerfile:          filepath.Base(b.uniqueDockerfile(step)),
@@ -209,7 +209,7 @@ func (b *Builder) BuildStep(step *Step) error {
 
 		if !b.Conf.NoSquash && len(step.Cleanup.Commands) > 0 {
 			// start the container
-			b.Conf.Logger.Notice("Starting container %s to run cleanup commands", container.ID)
+			b.Conf.Logger.Noticef("Starting container %s to run cleanup commands", container.ID)
 			startOpts := &docker.HostConfig{}
 			err := b.docker.StartContainer(container.ID, startOpts)
 			if err != nil {
@@ -217,7 +217,7 @@ func (b *Builder) BuildStep(step *Step) error {
 			}
 
 			for _, cmd := range step.Cleanup.Commands {
-				b.Conf.Logger.Debug("Running cleanup command %s on %s", cmd, container.ID)
+				b.Conf.Logger.Debugf("Running cleanup command %s on %s", cmd, container.ID)
 				// create an exec for the commands
 				execOpts := docker.CreateExecOptions{
 					Container:    container.ID,
@@ -242,7 +242,7 @@ func (b *Builder) BuildStep(step *Step) error {
 					}
 
 					if err := b.docker.StartExec(execObj.ID, startExecOpts); err != nil {
-						b.Conf.Logger.Error("Failed to run cleanup commands %s", err.Error())
+						b.Conf.Logger.Errorf("Failed to run cleanup commands %s", err.Error())
 					}
 					success <- struct{}{}
 				}()
@@ -254,13 +254,13 @@ func (b *Builder) BuildStep(step *Step) error {
 				Container: container.ID,
 			}
 
-			b.Conf.Logger.Debug("Commiting the container %s", container.ID)
+			b.Conf.Logger.Debugf("Commiting the container %s", container.ID)
 			img, err := b.docker.CommitContainer(cmtOpts)
 			if err != nil {
 				return err
 			}
 
-			b.Conf.Logger.Debug("Stopping the container %s", container.ID)
+			b.Conf.Logger.Debugf("Stopping the container %s", container.ID)
 			err = b.docker.StopContainer(container.ID, 0)
 			if err != nil {
 				return err
@@ -282,7 +282,7 @@ func (b *Builder) BuildStep(step *Step) error {
 				OutputStream: tarWriter,
 			}
 
-			b.Conf.Logger.Notice("Exporting cleaned up container %s to %s", img.ID, tmpFile.Name())
+			b.Conf.Logger.Noticef("Exporting cleaned up container %s to %s", img.ID, tmpFile.Name())
 			err = b.docker.ExportImage(expOpts)
 			if err != nil {
 				return err
@@ -294,7 +294,7 @@ func (b *Builder) BuildStep(step *Step) error {
 				return err
 			}
 			defer sqTmpFile.Close()
-			b.Conf.Logger.Notice("Squashing image %s into %s", sqTmpFile.Name(), img.ID)
+			b.Conf.Logger.Noticef("Squashing image %s into %s", sqTmpFile.Name(), img.ID)
 
 			squasher := squash.Squasher{Conf: b.Conf}
 			err = squasher.Squash(tmpFile.Name(), sqTmpFile.Name(), b.uniqueStepName(step))
@@ -302,7 +302,7 @@ func (b *Builder) BuildStep(step *Step) error {
 				return err
 			}
 
-			b.Conf.Logger.Debug("Removing exported temp files")
+			b.Conf.Logger.Debugf("Removing exported temp files")
 			err = os.Remove(tmpFile.Name())
 			if err != nil {
 				return err
@@ -317,7 +317,7 @@ func (b *Builder) BuildStep(step *Step) error {
 			loadOps := docker.LoadImageOptions{
 				InputStream: sqashedFile,
 			}
-			b.Conf.Logger.Debug("Loading squashed image into docker")
+			b.Conf.Logger.Debugf("Loading squashed image into docker")
 			err = b.docker.LoadImage(loadOps)
 			if err != nil {
 				return err
@@ -330,7 +330,7 @@ func (b *Builder) BuildStep(step *Step) error {
 		}
 
 		if len(step.Artefacts) > 0 {
-			b.Conf.Logger.Notice("Starting container %s to fetch artefact permissions", container.ID)
+			b.Conf.Logger.Noticef("Starting container %s to fetch artefact permissions", container.ID)
 			startOpts := &docker.HostConfig{}
 			err := b.docker.StartContainer(container.ID, startOpts)
 			if err != nil {
@@ -362,25 +362,25 @@ func (b *Builder) BuildStep(step *Step) error {
 				}
 
 				if err := b.docker.StartExec(execObj.ID, startExecOpts); err != nil {
-					b.Conf.Logger.Error("Failed to fetch artefact permissions for %s: %s", art.Source, err.Error())
+					b.Conf.Logger.Errorf("Failed to fetch artefact permissions for %s: %s", art.Source, err.Error())
 				}
 
 				permsString := strings.Replace(strings.Replace(buf.String(), "'", "", -1), "\n", "", -1)
 				perms, err := strconv.Atoi(permsString)
 				if err != nil {
-					b.Conf.Logger.Error("Failed to fetch artefact permissions for %s: %s", art.Source, err.Error())
+					b.Conf.Logger.Errorf("Failed to fetch artefact permissions for %s: %s", art.Source, err.Error())
 				}
 				permMap[art.Source] = perms
-				b.Conf.Logger.Debug("Permissions for %s is %d", art.Source, perms)
+				b.Conf.Logger.Debugf("Permissions for %s is %d", art.Source, perms)
 			}
 
-			b.Conf.Logger.Debug("Stopping the container %s", container.ID)
+			b.Conf.Logger.Debugf("Stopping the container %s", container.ID)
 			err = b.docker.StopContainer(container.ID, 0)
 			if err != nil {
 				return err
 			}
 
-			b.Conf.Logger.Notice("Copying artefacts from %s", container.ID)
+			b.Conf.Logger.Noticef("Copying artefacts from %s", container.ID)
 
 			for _, art := range step.Artefacts {
 				err = b.copyToHost(&art, container.ID, permMap)
@@ -392,7 +392,7 @@ func (b *Builder) BuildStep(step *Step) error {
 
 		// any commands to run?
 		if step.Command != "" {
-			b.Conf.Logger.Notice("Starting container %s to run commands", container.ID)
+			b.Conf.Logger.Noticef("Starting container %s to run commands", container.ID)
 			startOpts := &docker.HostConfig{}
 
 			err := b.docker.StartContainer(container.ID, startOpts)
@@ -421,13 +421,13 @@ func (b *Builder) BuildStep(step *Step) error {
 				Detach:       false,
 			}
 
-			b.Conf.Logger.Notice("Running command %s on container %s", execOpts.Cmd, container.ID)
+			b.Conf.Logger.Noticef("Running command %s on container %s", execOpts.Cmd, container.ID)
 
 			if err := b.docker.StartExec(execObj.ID, startExecOpts); err != nil {
-				b.Conf.Logger.Error("Failed to execute command '%s' due to %s", step.Command, err.Error())
+				b.Conf.Logger.Errorf("Failed to execute command '%s' due to %s", step.Command, err.Error())
 			}
 
-			b.Conf.Logger.Notice("\n%s", buf)
+			b.Conf.Logger.Noticef("\n%s", buf)
 
 			inspect, err := b.docker.InspectExec(execObj.ID)
 			if err != nil {
@@ -435,13 +435,13 @@ func (b *Builder) BuildStep(step *Step) error {
 			}
 
 			if inspect.ExitCode != 0 {
-				b.Conf.Logger.Error("Running command %s on container %s exit with exit code %d", execOpts.Cmd, container.ID, inspect.ExitCode)
+				b.Conf.Logger.Errorf("Running command %s on container %s exit with exit code %d", execOpts.Cmd, container.ID, inspect.ExitCode)
 				return err
 			} else {
-				b.Conf.Logger.Notice("Running command %s on container %s exit with exit code %d", execOpts.Cmd, container.ID, inspect.ExitCode)
+				b.Conf.Logger.Noticef("Running command %s on container %s exit with exit code %d", execOpts.Cmd, container.ID, inspect.ExitCode)
 			}
 
-			b.Conf.Logger.Debug("Stopping the container %s", container.ID)
+			b.Conf.Logger.Debugf("Stopping the container %s", container.ID)
 			err = b.docker.StopContainer(container.ID, 0)
 			if err != nil {
 				return err
@@ -455,7 +455,7 @@ func (b *Builder) BuildStep(step *Step) error {
 			Force:         true,
 		}
 
-		b.Conf.Logger.Debug("Removing built container %s", container.ID)
+		b.Conf.Logger.Debugf("Removing built container %s", container.ID)
 		err = b.docker.RemoveContainer(removeOpts)
 		if err != nil {
 			return err
@@ -474,7 +474,7 @@ func (b *Builder) BuildStep(step *Step) error {
 // this replaces the FROM field in the Dockerfile to one with the previous step's unique name
 // it stores the parsed result Dockefile in uniqueSessionName file
 func (b *Builder) replaceFromField(step *Step) error {
-	b.Conf.Logger.Notice("Parsing and converting '%s'", step.Dockerfile)
+	b.Conf.Logger.Noticef("Parsing and converting '%s'", step.Dockerfile)
 
 	rwc, err := os.Open(path.Join(b.Conf.Workdir, step.Dockerfile))
 	if err != nil {
@@ -507,7 +507,7 @@ func (b *Builder) replaceFromField(step *Step) error {
 	}
 
 	// did it have any effect?
-	b.Conf.Logger.Debug("Writing the new Dockerfile into %s", step.Dockerfile+".generated")
+	b.Conf.Logger.Debugf("Writing the new Dockerfile into %s", step.Dockerfile+".generated")
 	err = ioutil.WriteFile(b.uniqueDockerfile(step), []byte(dumpDockerfile(node)), 0644)
 	if err != nil {
 		return err
@@ -561,7 +561,7 @@ func (b *Builder) copyToHost(a *Artefact, container string, perms map[string]int
 
 		switch hdr.Typeflag {
 		case tar.TypeReg:
-			b.Conf.Logger.Info("Copying from %s to %s", a.Source, destFile)
+			b.Conf.Logger.Infof("Copying from %s to %s", a.Source, destFile)
 
 			dest, err := os.Create(destFile)
 			if err != nil {
@@ -577,7 +577,7 @@ func (b *Builder) copyToHost(a *Artefact, container string, perms map[string]int
 		}
 	}
 
-	b.Conf.Logger.Debug("Setting file permissions for %s to %d", destFile, perms[a.Source])
+	b.Conf.Logger.Debugf("Setting file permissions for %s to %d", destFile, perms[a.Source])
 	err = os.Chmod(destFile, os.FileMode(perms[a.Source])|0700)
 	if err != nil {
 		return err

@@ -26,7 +26,7 @@ type Squasher struct {
 func (s *Squasher) shutdown(tempdir string) {
 	defer wg.Done()
 	<-signals
-	s.Conf.Logger.Debug("Removing tempdir %s", tempdir)
+	s.Conf.Logger.Debugf("Removing tempdir %s", tempdir)
 	err := os.RemoveAll(tempdir)
 	if err != nil {
 		s.Conf.Logger.Fatal(err.Error())
@@ -114,7 +114,7 @@ func (s *Squasher) Squash(input string, output string, tag string) error {
 		return err
 	}
 
-	s.Conf.Logger.Debug("Inserted new layer %s after %s", newEntry.LayerConfig.Id[0:12],
+	s.Conf.Logger.Debugf("Inserted new layer %s after %s", newEntry.LayerConfig.Id[0:12],
 		newEntry.LayerConfig.Parent[0:12])
 
 	e := export.Root()
@@ -128,9 +128,9 @@ func (s *Squasher) Squash(input string, output string, tag string) error {
 		}
 
 		if e.LayerConfig.Id == newEntry.LayerConfig.Id {
-			s.Conf.Logger.Debug("  -> %s %s", e.LayerConfig.Id[0:12], cmd)
+			s.Conf.Logger.Debugf("  -> %s %s", e.LayerConfig.Id[0:12], cmd)
 		} else {
-			s.Conf.Logger.Debug("  -  %s %s", e.LayerConfig.Id[0:12], cmd)
+			s.Conf.Logger.Debugf("  -  %s %s", e.LayerConfig.Id[0:12], cmd)
 		}
 		e = export.ChildOf(e.LayerConfig.Id)
 	}
@@ -141,7 +141,7 @@ func (s *Squasher) Squash(input string, output string, tag string) error {
 		return err
 	}
 
-	s.Conf.Logger.Debug("Tarring up squashed layer %s", newEntry.LayerConfig.Id[:12])
+	s.Conf.Logger.Debugf("Tarring up squashed layer %s", newEntry.LayerConfig.Id[:12])
 	// create a layer.tar from our squashed layer
 	err = newEntry.TarLayer()
 	if err != nil {
@@ -169,7 +169,7 @@ func (s *Squasher) Squash(input string, output string, tag string) error {
 		tagInfo[tagPart] = layer.LayerConfig.Id
 		export.Repositories[repoPart] = &tagInfo
 
-		s.Conf.Logger.Debug("Tagging %s as %s:%s", layer.LayerConfig.Id[0:12], repoPart, tagPart)
+		s.Conf.Logger.Debugf("Tagging %s as %s:%s", layer.LayerConfig.Id[0:12], repoPart, tagPart)
 		err := export.WriteRepositoriesJson()
 		if err != nil {
 			return err
@@ -183,9 +183,9 @@ func (s *Squasher) Squash(input string, output string, tag string) error {
 		if err != nil {
 			return err
 		}
-		s.Conf.Logger.Debug("Tarring new image to %s", output)
+		s.Conf.Logger.Debugf("Tarring new image to %s", output)
 	} else {
-		s.Conf.Logger.Debug("Tarring new image to STDOUT")
+		s.Conf.Logger.Debugf("Tarring new image to STDOUT")
 	}
 	// bundle up the new image
 	err = export.TarLayers(ow)

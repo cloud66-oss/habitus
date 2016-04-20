@@ -34,6 +34,8 @@ type Config struct {
 	FroceRmImages       bool
 	ApiPort             int
 	ApiBinding          string
+	SecretService       bool
+	SecretProviders     string
 }
 
 func (i *TupleArray) String() string {

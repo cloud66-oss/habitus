@@ -13,15 +13,19 @@ import (
 	"github.com/bugsnag/bugsnag-go"
 )
 
-var format = logging.MustStringFormatter(
+var prettyFormat = logging.MustStringFormatter(
 	"%{color}▶ %{message} %{color:reset}",
+)
+var plainFormat = logging.MustStringFormatter(
+	"[%{level}] - %{message}",
 )
 
 var (
 	flagLevel       string
 	flagShowHelp    bool
 	flagShowVersion bool
-	VERSION         string = "0.3.0"
+	flagPrettyLog   bool
+	VERSION         string = "dev"
 	BUILD_DATE      string = ""
 )
 
@@ -37,7 +41,7 @@ func main() {
 	defer bugsnag.AutoNotify()
 
 	var log = logging.MustGetLogger("habitus")
-	logging.SetFormatter(format)
+	logging.SetFormatter(plainFormat)
 
 	config := configuration.CreateConfig()
 	flag.StringVar(&config.Buildfile, "f", "build.yml", "Build file path. Defaults to build.yml in the workdir")
@@ -48,6 +52,7 @@ func main() {
 	flag.BoolVar(&config.ForceRmTmpContainer, "force-rm", false, "Force remove intermediate containers")
 	flag.StringVar(&config.UniqueID, "uid", "", "Unique ID for the build. Used only for multi-tenanted build environments")
 	flag.StringVar(&flagLevel, "level", "debug", "Log level: debug, info, notice, warning, error and critical")
+	flag.BoolVar(&flagPrettyLog, "pretty", true, "Display logs with color and formatting")
 	flag.StringVar(&config.DockerHost, "host", os.Getenv("DOCKER_HOST"), "Docker host link. Uses DOCKER_HOST if missing")
 	flag.StringVar(&config.DockerCert, "certs", os.Getenv("DOCKER_CERT_PATH"), "Docker cert folder. Uses DOCKER_CERT_PATH if missing")
 	flag.Var(&config.EnvVars, "env", "Environment variables to be used during build. Uses parent process environment variables if empty")
@@ -60,10 +65,15 @@ func main() {
 	flag.BoolVar(&flagShowVersion, "version", false, "Display version information")
 	flag.IntVar(&config.ApiPort, "port", 8080, "Port to server the API")
 	flag.StringVar(&config.ApiBinding, "binding", "192.168.99.1", "Network address to bind the API to. (see documentation for more info)")
+	flag.BoolVar(&config.SecretService, "secrets", true, "Turn Secrets Service on or off")
+	flag.StringVar(&config.SecretProviders, "sec-providers", "file", "All available secret providers. Comma separated")
 
 	config.Logger = *log
-
 	flag.Parse()
+
+	if flagPrettyLog {
+		logging.SetFormatter(prettyFormat)
+	}
 
 	if flagShowHelp || (len(args) > 0 && args[0] == "help") {
 		fmt.Println("Habitus - (c) 2016 Cloud 66 Inc.")
@@ -112,16 +122,18 @@ func main() {
 
 	b := build.NewBuilder(c, &config)
 
-	// start the API
-	api := &server{builder: b}
-	err = api.StartServer()
-	if err != nil {
-		log.Fatal("Cannot start API server due to %s", err.Error())
-		os.Exit(2)
+	if config.SecretService {
+		// start the API
+		api := &server{builder: b}
+		err = api.StartServer()
+		if err != nil {
+			log.Fatalf("Cannot start API server due to %s", err.Error())
+			os.Exit(2)
+		}
 	}
 
 	err = b.StartBuild()
 	if err != nil {
-		log.Error("Error during build %s", err.Error())
+		log.Errorf("Error during build %s", err.Error())
 	}
 }
