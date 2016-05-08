@@ -56,11 +56,15 @@ func NewBuilder(manifest *Manifest, conf *configuration.Config) *Builder {
 	if endpoint.Scheme == "unix" {
 		client, err = docker.NewClient(endpoint.String())
 	} else {
-		certPath := b.Conf.DockerCert
-		ca := path.Join(certPath, "ca.pem")
-		cert := path.Join(certPath, "cert.pem")
-		key := path.Join(certPath, "key.pem")
-		client, err = docker.NewTLSClient(endpoint.String(), cert, key, ca)
+		if conf.UseTLS {
+			certPath := b.Conf.DockerCert
+			ca := path.Join(certPath, "ca.pem")
+			cert := path.Join(certPath, "cert.pem")
+			key := path.Join(certPath, "key.pem")
+			client, err = docker.NewTLSClient(endpoint.String(), cert, key, ca)
+		} else {
+			client, err = docker.NewClient(endpoint.String())
+		}
 	}
 
 	if err != nil {
