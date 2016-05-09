@@ -31,6 +31,7 @@ type Config struct {
 	KeepSteps           bool
 	NoSquash            bool
 	NoPruneRmImages     bool
+	UseTLS              bool
 	FroceRmImages       bool
 	ApiPort             int
 	ApiBinding          string
