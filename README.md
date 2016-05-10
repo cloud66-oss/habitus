@@ -9,4 +9,4 @@ A Build Flow Tool for Docker
 
 Habitus is a standalone build flow tool for Docker. It is a command line tool that builds Docker images based on their `Dockerfile` and a `build.yml`.
 
-For complete documentation, please see [habitus.io](http://habitus.io)
+For complete documentation, please see [habitus.io](http://www.habitus.io)
