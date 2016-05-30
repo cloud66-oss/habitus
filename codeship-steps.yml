@@ -1,0 +1,3 @@
+- name: test_step
+  service: habitus
+  command: pwd
