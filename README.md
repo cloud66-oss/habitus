@@ -15,13 +15,13 @@ Habitus is a standalone build flow tool for Docker. It’s a command line tool t
 
 ### Key features:
 __________________________________________________________________
-- Use *build.yml* to build the image
-- Supports *multi-tenancy* of builds by using `uid` parameters
-- Allows to run *arbitrary commands* inside of the build container
-- Allows *dovetailing (sequencing)* of the images from different steps
-- After build, Habitus will run *Cleanup command*. This will result in 'squashing' the image, therefore removing any traces of unwanted layers
-- Allows you to define and manage *secrets configuration* for your build
-- Allows you specify any *Artifacts* - they'll be copied from the built image onto the work directory, so they'll be available for next steps.
+- Use **build.yml** to build the image
+- Supports **multi-tenancy** of builds by using `uid` parameters
+- Allows to run **arbitrary commands** inside of the build container
+- Allows **dovetailing (sequencing)** of the images from different steps
+- After build, Habitus will run **Cleanup command**. This will result in 'squashing' the image, therefore removing any traces of unwanted layers
+- Allows you to define and manage **secrets configuration** for your build
+- Allows you specify any **Artifacts** - they'll be copied from the built image onto the work directory, so they'll be available for next steps.
 - Support for non TLS connections
 
 ### Why Habitus? (Problem → solution)
@@ -56,7 +56,7 @@ http://www.habitus.io/
 ________________________________________________________________________________________________________
 
 First step is to download Habitus.
-Build files can be made up of multiple steps. Each step is independent of the other ones and downstream steps can use upstream ones as source (in `FROM` command). When habitus is installed, create a simple *build.yml* with just one build step and run Habitus. 
+Build files can be made up of multiple steps. Each step is independent of the other ones and downstream steps can use upstream ones as source (in `FROM` command). When habitus is installed, create a simple **build.yml** with just one build step and run Habitus. 
 
     build:
       version: 2016-03-14 # version of the build schema.
