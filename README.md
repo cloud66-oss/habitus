@@ -1,11 +1,17 @@
+Habitus
+=======
+![Codeship Status for cloud66/habitus](https://codeship.com/projects/714284d0-e914-0133-1e5d-4eaa3299b296/status)
 
+- Website: http://www.habitus.io/
+- [Download Habitus](https://github.com/cloud66/habitus/releases?utm_source=Githubdownload&utm_medium=GHDpage&utm_campaign=habitus)
+- Slack Channel: https://cloud66ers.slack.com/messages/habitus/
+- Articles: http://blog.cloud66.com/tag/habitus/
 
 ![Logo habitus](https://lh5.googleusercontent.com/_PbaTkJhpA9zVRW_pj3Mt1ntpAZ6IUjTn0yDkVCsUZnJnE3jAxr5ciGF5SqdtR45--EHlIdYyr3dj7DcjRVfLBSS6BQPaGrwzzvMqqEcDJc47sDY4d2s9QQlJi3ZXUYPkODWOF2a)
 A build flow tool for Docker 
 
 Habitus is a standalone build flow tool for Docker. It’s a command line tool that builds Docker images based on their Dockerfile and a build.yml. 
 
-![Codeship Status for cloud66/habitus](https://codeship.com/projects/714284d0-e914-0133-1e5d-4eaa3299b296/status)
 
 
 Key features:
