@@ -28,20 +28,20 @@ __________________________________________________________________
 ______________________________________________________________________
 
 
-- If you need to pull code from a private git repository: 
-- Your private SSH key will be needed in the image during the build process. By using Habitus, the web server only exposes your secrets to the internal Docker network of your machine, and only for the duration of the build. No traces of your secrets are left behind in the image.
+- If you need to pull code from a private git repository:                           
+  Your private SSH key will be needed in the image during the build process. By using Habitus, the web server only exposes your secrets to the internal Docker network of your machine, and only for the duration of the build. No traces of your secrets are left behind in the image.
 
 
-- If you want to add compile-time libraries to your image, but don’t want them in the run-time:
--  Habitus will solve it by using different build steps in building your artifact and only place that artifact in smallest possible image.
+- If you want to add compile-time libraries to your image, but don’t want them in the run-time:                      
+   Habitus will solve it by using different build steps in building your artifact and only place that artifact in smallest possible image.
 
 
-- If you want to combine multiple Dockerfiles into complex build and  deployments workflows:
-- Take the example of an app written in Go: it lives in a container and serves content to visitors based on the latest trending hashtags on Twitter. To get this app into a container, you need to build it with Go compile time libraries. This makes the image large, increasing the attack surface of your service. Habitus solves this issue by compiling your Go app in one container with all compile-time dependencies, and then moves the compiled build artefacts to another smaller image with only the minimum packages required to run it.
+- If you want to combine multiple Dockerfiles into complex build and  deployments workflows:                             
+  Take the example of an app written in Go: it lives in a container and serves content to visitors based on the latest trending hashtags on Twitter. To get this app into a container, you need to build it with Go compile time libraries. This makes the image large, increasing the attack surface of your service. Habitus solves this issue by compiling your Go app in one container with all compile-time dependencies, and then moves the compiled build artefacts to another smaller image with only the minimum packages required to run it.
 
 
-- If you need to run images in production:
-- Habitus helps you build a small, secure, performant, stable and immutable image in production. This will allow you to run non-leaky containers and healthy applications in production.
+- If you need to run images in production:                                
+  Habitus helps you build a small, secure, performant, stable and immutable image in production. This will allow you to run non-leaky containers and healthy applications in production.
 
 ### Documentations:
 _________________________________________________________________________________________________________
