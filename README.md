@@ -1,5 +1,4 @@
-Habitus
-=======
+# Habitus
 ![Codeship Status for cloud66/habitus](https://codeship.com/projects/714284d0-e914-0133-1e5d-4eaa3299b296/status)
 
 - Website: http://www.habitus.io/
@@ -14,18 +13,18 @@ Habitus is a standalone build flow tool for Docker. It’s a command line tool t
 
 
 
-Key features:
+### Key features:
 __________________________________________________________________
-- Use build.yml to build the image
-- Supports multi-tenancy of builds by using `uid` parameters
-- Allows to run arbitrary commands inside of the build container
-- Allows dovetailing (sequencing) of the images from different steps
-- After build, Habitus will run Cleanup command. This will result in 'squashing' the image, therefore removing any traces of unwanted layers
-- Allows you to define and manage secrets configuration for your build
-- Allows you specify any Artifacts - they'll be copied from the built image onto the work directory, so they'll be available for next steps.
+- Use *build.yml* to build the image
+- Supports *multi-tenancy* of builds by using `uid` parameters
+- Allows to run *arbitrary commands* inside of the build container
+- Allows *dovetailing (sequencing)* of the images from different steps
+- After build, Habitus will run *Cleanup command*. This will result in 'squashing' the image, therefore removing any traces of unwanted layers
+- Allows you to define and manage *secrets configuration* for your build
+- Allows you specify any *Artifacts* - they'll be copied from the built image onto the work directory, so they'll be available for next steps.
 - Support for non TLS connections
 
-Why Habitus? (Problem → solution)
+### Why Habitus? (Problem → solution)
 ______________________________________________________________________
 
 
@@ -44,7 +43,7 @@ ______________________________________________________________________
 - If you need to run images in production:
 - Habitus helps you build a small, secure, performant, stable and immutable image in production. This will allow you to run non-leaky containers and healthy applications in production.
 
-Documentations:
+### Documentations:
 _________________________________________________________________________________________________________
 
 Comprehensive documentation is available on the Habitus website:
@@ -53,11 +52,11 @@ http://www.habitus.io/
 
 
 
-Quick Start: 
+### Quick Start: 
 ________________________________________________________________________________________________________
 
 First step is to download Habitus.
-Build files can be made up of multiple steps. Each step is independent of the other ones and downstream steps can use upstream ones as source (in `FROM` command). When habitus is installed, create a simple build.yml with just one build step and run Habitus. 
+Build files can be made up of multiple steps. Each step is independent of the other ones and downstream steps can use upstream ones as source (in `FROM` command). When habitus is installed, create a simple *build.yml* with just one build step and run Habitus. 
 
     build:
       version: 2016-03-14 # version of the build schema.
@@ -72,7 +71,7 @@ Run habitus
 
 And you’re ready to start using Habitus.  Comprehensive documentation about build.yml is available on the Habitus website: http://www.habitus.io/
 
-Developing Habitus:
+### Developing Habitus:
 ________________________________________________________________________________________________________
 
 If you wish to work on the Habitus project itself. We provided a docker-compose.yml to spin up the development environment and link the source into the running container.
@@ -89,9 +88,7 @@ You can run tests by typing
 
 And you are ready to start your contribution to Habitus. 
 
-*Difference with Windows or OS or Linux
+#### Difference with Windows or OS or Linux
 ______________________________________________________________________________________________________
-
-
 - On a Linux machine where Docker can run natively you can bind Habitus to 127.0.0.1.
 - On a Mac (OSX) Docker runs inside of a VM (VirtualBox in most cases through Boot2Docker). This means you need to find the VM address of your Mac and use that to bind Habitus to. By default, Boot2Docker (and Docker Machine) use 192.168.99.1 which is what Habitus uses by default.
