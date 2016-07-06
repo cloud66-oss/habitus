@@ -1,4 +1,6 @@
 # Habitus
+Habitus adds workflows to Docker build. This means you can create a chain of builds to generate your final Docker image based on a workflow. This is particularly useful if your code is in compiled languages like Java or Go or if you need to use secrets like SSH keys during the build.
+
 ![Codeship Status for cloud66/habitus](https://codeship.com/projects/714284d0-e914-0133-1e5d-4eaa3299b296/status)
 
 - Website: http://www.habitus.io/
