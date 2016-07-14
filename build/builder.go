@@ -148,7 +148,7 @@ func (b *Builder) StartBuild() error {
 
 // provides a name for the image
 // it always adds the UID (if provided) to the end of the name
-// so it either be a tag or part of the provided tag
+// keeping the tag intact if it exists
 func (b *Builder) uniqueStepName(step *Step) string {
 	if b.UniqueID == "" {
 		return step.Name
@@ -156,9 +156,10 @@ func (b *Builder) uniqueStepName(step *Step) string {
 
 	newName := step.Name
 	if strings.Contains(step.Name, ":") {
-		newName = step.Name + "-" + b.UniqueID
+		parts := strings.Split(step.Name, ":")
+		newName = parts[0] + "-" + b.UniqueID + ":" + parts[1]
 	} else {
-		newName = step.Name + ":" + b.UniqueID
+		newName = step.Name + "-" + b.UniqueID
 	}
 
 	return strings.ToLower(newName)
@@ -178,7 +179,7 @@ func (b *Builder) BuildStep(step *Step) error {
 		buildArgs = append(buildArgs, docker.BuildArg{Name: s.Key, Value: s.Value})
 	}
 	// call Docker to build the Dockerfile (from the parsed file)
-	b.Conf.Logger.Debugf("Building the image from %s", filepath.Base(b.uniqueDockerfile(step)))
+	b.Conf.Logger.Infof("Building the %s image from %s", b.uniqueStepName(step), filepath.Base(b.uniqueDockerfile(step)))
 	opts := docker.BuildImageOptions{
 		Name:                b.uniqueStepName(step),
 		Dockerfile:          filepath.Base(b.uniqueDockerfile(step)),
