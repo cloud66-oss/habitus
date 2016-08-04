@@ -290,6 +290,7 @@ type Config struct {
 	StdinOnce         bool                `json:"StdinOnce,omitempty" yaml:"StdinOnce,omitempty"`
 	Env               []string            `json:"Env,omitempty" yaml:"Env,omitempty"`
 	Cmd               []string            `json:"Cmd" yaml:"Cmd"`
+	Healthcheck       *HealthConfig       `json:"Healthcheck,omitempty" yaml:"Healthcheck,omitempty"`
 	DNS               []string            `json:"Dns,omitempty" yaml:"Dns,omitempty"` // For Docker API v1.9 and below only
 	Image             string              `json:"Image,omitempty" yaml:"Image,omitempty"`
 	Volumes           map[string]struct{} `json:"Volumes,omitempty" yaml:"Volumes,omitempty"`
@@ -347,6 +348,29 @@ type SwarmNode struct {
 type GraphDriver struct {
 	Name string            `json:"Name,omitempty" yaml:"Name,omitempty"`
 	Data map[string]string `json:"Data,omitempty" yaml:"Data,omitempty"`
+}
+
+// HealthConfig holds configuration settings for the HEALTHCHECK feature
+//
+// It has been added in the version 1.24 of the Docker API, available since
+// Docker 1.12.
+type HealthConfig struct {
+	// Test is the test to perform to check that the container is healthy.
+	// An empty slice means to inherit the default.
+	// The options are:
+	// {} : inherit healthcheck
+	// {"NONE"} : disable healthcheck
+	// {"CMD", args...} : exec arguments directly
+	// {"CMD-SHELL", command} : run command with system's default shell
+	Test []string `json:"Test,omitempty" yaml:"Test,omitempty"`
+
+	// Zero means to inherit. Durations are expressed as integer nanoseconds.
+	Interval time.Duration `json:"Interval,omitempty" yaml:"Interval,omitempty"` // Interval is the time to wait between checks.
+	Timeout  time.Duration `json:"Timeout,omitempty" yaml:"Timeout,omitempty"`   // Timeout is the time to wait before considering the check to have hung.
+
+	// Retries is the number of consecutive failures needed to consider a container as unhealthy.
+	// Zero means inherit.
+	Retries int `json:"Retries,omitempty" yaml:"Retries,omitempty"`
 }
 
 // Container is the type encompasing everything about a container - its config,
@@ -668,7 +692,7 @@ type HostConfig struct {
 // NetworkingConfig represents the container's networking configuration for each of its interfaces
 // Carries the networking configs specified in the `docker run` and `docker network connect` commands
 type NetworkingConfig struct {
-	EndpointsConfig map[string]*EndpointConfig // Endpoint configs for each connecting network
+	EndpointsConfig map[string]*EndpointConfig `json:"EndpointsConfig" yaml:"EndpointsConfig"` // Endpoint configs for each connecting network
 }
 
 // StartContainer starts a container, returning an error in case of failure.
