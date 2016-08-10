@@ -18,8 +18,8 @@ var (
 	validTypes = []string{"file"}
 )
 
-// Artefact holds a parsed source for a build artefact
-type Artefact struct {
+// Artifact holds a parsed source for a build artifact
+type Artifact struct {
 	Step   Step
 	Source string
 	Dest   string // this is only the folder. Filename comes from the source
@@ -43,7 +43,7 @@ type Step struct {
 	Name       string
 	Label      string
 	Dockerfile string
-	Artefacts  []Artefact
+	Artifacts  []Artifact
 	Manifest   Manifest
 	Cleanup    *Cleanup
 	DependsOn  []*Step
@@ -73,7 +73,7 @@ type secret struct {
 type step struct {
 	Name       string            `yaml:"name"`
 	Dockerfile string            `yaml:"dockerfile"`
-	Artefacts  []string          `yaml:"artifacts"`
+	Artifacts  []string          `yaml:"artifacts"`
 	Cleanup    *cleanup          `yaml:"cleanup"`
 	DependsOn  []string          `yaml:"depends_on"`
 	Command    string            `yaml:"command"`
@@ -136,7 +136,7 @@ func (n *namespace) convertToBuild(version string) (*Manifest, error) {
 		convertedStep.Dockerfile = s.Dockerfile
 		convertedStep.Name = s.Name
 		convertedStep.Label = name
-		convertedStep.Artefacts = []Artefact{}
+		convertedStep.Artifacts = []Artifact{}
 		convertedStep.Command = s.Command
 		if s.Cleanup != nil && !n.Config.NoSquash {
 			convertedStep.Cleanup = &Cleanup{Commands: s.Cleanup.Commands}
@@ -166,8 +166,8 @@ func (n *namespace) convertToBuild(version string) (*Manifest, error) {
 			}
 		}
 
-		for _, a := range s.Artefacts {
-			convertedArt := Artefact{}
+		for _, a := range s.Artifacts {
+			convertedArt := Artifact{}
 
 			convertedArt.Step = convertedStep
 			parts := strings.Split(a, ":")
@@ -179,7 +179,7 @@ func (n *namespace) convertToBuild(version string) (*Manifest, error) {
 				convertedArt.Dest = parts[1]
 			}
 
-			convertedStep.Artefacts = append(convertedStep.Artefacts, convertedArt)
+			convertedStep.Artifacts = append(convertedStep.Artifacts, convertedArt)
 		}
 
 		// is it unique?

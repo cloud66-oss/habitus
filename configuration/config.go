@@ -29,6 +29,7 @@ type Config struct {
 	EnvVars             TupleArray
 	BuildArgs           TupleArray
 	KeepSteps           bool
+	KeepArtifacts       bool
 	NoSquash            bool
 	NoPruneRmImages     bool
 	UseTLS              bool
