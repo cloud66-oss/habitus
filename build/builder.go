@@ -102,6 +102,13 @@ func NewBuilder(manifest *Manifest, conf *configuration.Config) *Builder {
 
 // StartBuild runs the build process end to end
 func (b *Builder) StartBuild() error {
+
+	var hostArtifactRoots []string
+	if !b.Conf.KeepArtifacts {
+		b.Conf.Logger.Debugf("Collecting artifact information", len(b.Build.Steps))
+		hostArtifactRoots = b.collectHostArtifactRoots()
+	}
+
 	b.Conf.Logger.Debugf("Building %d steps", len(b.Build.Steps))
 	for i, s := range b.Build.Steps {
 		b.Conf.Logger.Debugf("Step %d - %s: %s", i, s.Label, s.Name)
@@ -124,6 +131,16 @@ func (b *Builder) StartBuild() error {
 		b.wg.Wait()
 	}
 
+	if !b.Conf.KeepArtifacts {
+		// remove all artifacts created on the host
+		for _, hostArtifactRoot := range hostArtifactRoots {
+			b.Conf.Logger.Debugf("Removing artifact path: %s\n", hostArtifactRoot)
+			// this path might be removed already due to overlapping
+			// values; so we don't care if this fails
+			os.RemoveAll(hostArtifactRoot)
+		}
+	}
+
 	if b.Conf.KeepSteps {
 		return nil
 	}
@@ -144,6 +161,36 @@ func (b *Builder) StartBuild() error {
 	}
 
 	return nil
+}
+
+// collects all existing artifact roots that are created
+// during the build process and saved on the host so they
+// can be removed at the end of the build process
+func (b *Builder) collectHostArtifactRoots() []string {
+	var hostArtifactRoots []string
+	if !b.Conf.KeepArtifacts {
+		for _, step := range b.Build.Steps {
+			for _, artifact := range step.Artifacts {
+				// get the projected relative path to the host file
+				absHostFile := path.Join(b.Conf.Workdir, artifact.Dest, filepath.Base(artifact.Source))
+				// use a regex to hand path expansion (ie. ../../)
+				relHostFile := regexp.MustCompile(fmt.Sprintf("^%s/+", b.Conf.Workdir)).ReplaceAllString(absHostFile, "")
+				// remove trailing /
+				relHostFile = regexp.MustCompile("/$").ReplaceAllString(relHostFile, "")
+				parts := strings.Split(relHostFile, "/")
+				currentPath := b.Conf.Workdir
+				for _, part := range parts {
+					currentPath = path.Join(currentPath, part)
+					if _, err := os.Stat(currentPath); os.IsNotExist(err) {
+						// everything from this point down should be deleted
+						hostArtifactRoots = append(hostArtifactRoots, currentPath)
+						break
+					}
+				}
+			}
+		}
+	}
+	return hostArtifactRoots
 }
 
 // provides a name for the image
@@ -201,9 +248,9 @@ func (b *Builder) BuildStep(step *Step) error {
 		return err
 	}
 
-	// if there are any artefacts to be picked up, create a container and copy them over
+	// if there are any artifacts to be picked up, create a container and copy them over
 	// we also need a container if there are cleanup commands
-	if len(step.Artefacts) > 0 || len(step.Cleanup.Commands) > 0 || step.Command != "" {
+	if len(step.Artifacts) > 0 || len(step.Cleanup.Commands) > 0 || step.Command != "" {
 		b.Conf.Logger.Notice("Building container based on the image")
 
 		// create a container
@@ -334,8 +381,8 @@ func (b *Builder) BuildStep(step *Step) error {
 			}
 		}
 
-		if len(step.Artefacts) > 0 {
-			b.Conf.Logger.Noticef("Starting container %s to fetch artefact permissions", container.ID)
+		if len(step.Artifacts) > 0 {
+			b.Conf.Logger.Noticef("Starting container %s to fetch artifact permissions", container.ID)
 			startOpts := &docker.HostConfig{}
 			err := b.docker.StartContainer(container.ID, startOpts)
 			if err != nil {
@@ -344,7 +391,7 @@ func (b *Builder) BuildStep(step *Step) error {
 
 			permMap := make(map[string]int)
 
-			for _, art := range step.Artefacts {
+			for _, art := range step.Artifacts {
 				execOpts := docker.CreateExecOptions{
 					Container:    container.ID,
 					AttachStdin:  false,
@@ -367,13 +414,13 @@ func (b *Builder) BuildStep(step *Step) error {
 				}
 
 				if err := b.docker.StartExec(execObj.ID, startExecOpts); err != nil {
-					b.Conf.Logger.Errorf("Failed to fetch artefact permissions for %s: %s", art.Source, err.Error())
+					b.Conf.Logger.Errorf("Failed to fetch artifact permissions for %s: %s", art.Source, err.Error())
 				}
 
 				permsString := strings.Replace(strings.Replace(buf.String(), "'", "", -1), "\n", "", -1)
 				perms, err := strconv.Atoi(permsString)
 				if err != nil {
-					b.Conf.Logger.Errorf("Failed to fetch artefact permissions for %s: %s", art.Source, err.Error())
+					b.Conf.Logger.Errorf("Failed to fetch artifact permissions for %s: %s", art.Source, err.Error())
 				}
 				permMap[art.Source] = perms
 				b.Conf.Logger.Debugf("Permissions for %s is %d", art.Source, perms)
@@ -385,9 +432,9 @@ func (b *Builder) BuildStep(step *Step) error {
 				return err
 			}
 
-			b.Conf.Logger.Noticef("Copying artefacts from %s", container.ID)
+			b.Conf.Logger.Noticef("Copying artifacts from %s", container.ID)
 
-			for _, art := range step.Artefacts {
+			for _, art := range step.Artifacts {
 				err = b.copyToHost(&art, container.ID, permMap)
 				if err != nil {
 					return err
@@ -532,15 +579,15 @@ func overwrite(mpath string) (*os.File, error) {
 	return f, nil
 }
 
-func (b *Builder) copyToHost(a *Artefact, container string, perms map[string]int) error {
-	// create the dest folder if not there
-	err := os.MkdirAll(a.Dest, 0777)
+func (b *Builder) copyToHost(a *Artifact, container string, perms map[string]int) error {
+	// create the artifacts distination folder if not there
+	destPath := path.Join(b.Conf.Workdir, a.Dest)
+	err := os.MkdirAll(destPath, 0777)
 	if err != nil {
 		return err
 	}
 
 	var out bytes.Buffer
-
 	opt := docker.DownloadFromContainerOptions{
 		OutputStream: &out,
 		Path:         a.Source,
@@ -551,8 +598,8 @@ func (b *Builder) copyToHost(a *Artefact, container string, perms map[string]int
 		return err
 	}
 
-	destFile := path.Join(b.Conf.Workdir, a.Dest, filepath.Base(a.Source))
-
+	// create artifact file on the host
+	destFile := path.Join(destPath, filepath.Base(a.Source))
 	tr := tar.NewReader(&out)
 	for {
 		hdr, err := tr.Next()

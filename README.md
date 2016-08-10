@@ -39,7 +39,7 @@ ______________________________________________________________________
 
 
 - If you want to combine multiple Dockerfiles into complex build and  deployments workflows:                             
-  Take the example of an app written in Go: it lives in a container and serves content to visitors based on the latest trending hashtags on Twitter. To get this app into a container, you need to build it with Go compile time libraries. This makes the image large, increasing the attack surface of your service. Habitus solves this issue by compiling your Go app in one container with all compile-time dependencies, and then moves the compiled build artefacts to another smaller image with only the minimum packages required to run it.
+  Take the example of an app written in Go: it lives in a container and serves content to visitors based on the latest trending hashtags on Twitter. To get this app into a container, you need to build it with Go compile time libraries. This makes the image large, increasing the attack surface of your service. Habitus solves this issue by compiling your Go app in one container with all compile-time dependencies, and then moves the compiled build artifacts to another smaller image with only the minimum packages required to run it.
 
 
 - If you need to run images in production:                                
