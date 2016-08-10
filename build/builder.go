@@ -105,7 +105,7 @@ func (b *Builder) StartBuild() error {
 
 	var hostArtifactRoots []string
 	if !b.Conf.KeepArtifacts {
-		b.Conf.Logger.Debugf("Collecting artifact information", len(b.Build.Steps))
+		b.Conf.Logger.Debug("Collecting artifact information")
 		hostArtifactRoots = b.collectHostArtifactRoots()
 	}
 
