@@ -671,7 +671,12 @@ func dumpDockerfile(node *parser.Node) string {
 	}
 
 	for _, n := range node.Children {
-		str += dumpDockerfile(n) + "\n"
+		if (n.Value == "cmd") {
+			//keep the old cmd
+			str += n.Original + "\n"
+		} else {
+			str += dumpDockerfile(n) + "\n"
+		}
 	}
 
 	if node.Next != nil {
