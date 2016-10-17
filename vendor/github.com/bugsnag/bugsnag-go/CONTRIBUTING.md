@@ -73,6 +73,9 @@ If you are a project maintainer, you can build and release a new version of
 1. Commit all your changes.
 2. Update the version number in `bugsnag.go`.
 3. Add an entry to `CHANGELOG.md` and update the README if necessary.
-4. commit tag and push
+4. Commit tag and push
 
     git commit -mv1.0.x && git tag v1.0.x && git push origin v1.0.x
+
+5. Update the setup guides for Go (and its frameworks) on docs.bugsnag.com with
+   any new content.

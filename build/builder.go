@@ -226,6 +226,7 @@ func (b *Builder) BuildStep(step *Step) error {
 		buildArgs = append(buildArgs, docker.BuildArg{Name: s.Key, Value: s.Value})
 	}
 	// call Docker to build the Dockerfile (from the parsed file)
+
 	b.Conf.Logger.Infof("Building the %s image from %s", b.uniqueStepName(step), filepath.Base(b.uniqueDockerfile(step)))
 	opts := docker.BuildImageOptions{
 		Name:                b.uniqueStepName(step),
@@ -244,6 +245,8 @@ func (b *Builder) BuildStep(step *Step) error {
 	}
 
 	err = b.docker.BuildImage(opts)
+	b.Conf.Logger.Noticef("Check tagging of %s", b.uniqueStepName(step))
+
 	if err != nil {
 		return err
 	}
@@ -534,7 +537,9 @@ func (b *Builder) replaceFromField(step *Step) error {
 	}
 	defer rwc.Close()
 
-	node, err := parser.Parse(rwc)
+	d := parser.Directive{LookingForDirectives: true}
+	parser.SetEscapeToken(parser.DefaultEscapeToken, &d)
+	node, err := parser.Parse(rwc, &d)
 	if err != nil {
 		return err
 	}

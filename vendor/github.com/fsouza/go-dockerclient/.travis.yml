@@ -1,9 +1,8 @@
 language: go
 sudo: required
 go:
-  - 1.5.4
   - 1.6.3
-  - 1.7rc5
+  - 1.7.1
   - tip
 os:
   - linux
@@ -14,8 +13,8 @@ env:
     - GOARCH=386   DOCKER_VERSION=1.10.3
     - GOARCH=amd64 DOCKER_VERSION=1.11.2
     - GOARCH=386   DOCKER_VERSION=1.11.2
-    - GOARCH=amd64 DOCKER_VERSION=1.12.0
-    - GOARCH=386   DOCKER_VERSION=1.12.0
+    - GOARCH=amd64 DOCKER_VERSION=1.12.2
+    - GOARCH=386   DOCKER_VERSION=1.12.2
   global:
     - GO_TEST_FLAGS=-race
     - DOCKER_HOST=tcp://127.0.0.1:2375

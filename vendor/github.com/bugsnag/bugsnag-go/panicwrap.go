@@ -7,8 +7,11 @@ import (
 	"github.com/bugsnag/panicwrap"
 )
 
-// NOTE: this function does not return when you call it, instead it
-// re-exec()s the current process with panic monitoring.
+// Forks and re-runs your program to add panic monitoring. This function does
+// not return on one process, instead listening on stderr of the other process,
+// which returns nil.
+//
+// Related: https://godoc.org/github.com/bugsnag/panicwrap#BasicMonitor
 func defaultPanicHandler() {
 	defer defaultNotifier.dontPanic()
 
