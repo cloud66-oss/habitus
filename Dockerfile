@@ -1,5 +1,5 @@
 #use the golang base image
-FROM golang:1.6
+FROM golang:1.7
 MAINTAINER Daniël van Gils
 
 #get all the go testing stuff
