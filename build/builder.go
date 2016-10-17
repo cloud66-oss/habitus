@@ -245,7 +245,6 @@ func (b *Builder) BuildStep(step *Step) error {
 	}
 
 	err = b.docker.BuildImage(opts)
-	b.Conf.Logger.Noticef("Check tagging of %s", b.uniqueStepName(step))
 
 	if err != nil {
 		return err
