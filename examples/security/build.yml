@@ -1,0 +1,10 @@
+build:
+version: 2016-03-14
+steps:
+  builder:
+    name: builder
+    dockerfile: Dockerfile
+    secrets:
+      id_rsa:
+        type: file
+        value: _env(HOME)/.ssh/id_rsa
