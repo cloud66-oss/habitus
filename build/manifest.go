@@ -308,7 +308,7 @@ func (m *Manifest) FindStepByLabel(label string) (*Step, error) {
 }
 
 func parseForEnvVars(config *configuration.Config, value []byte) []byte {
-	r, _ := regexp.Compile("_env\\((.*)\\)")
+	r, _ := regexp.Compile("(?U)_env\\((.*)\\)")
 
 	matched := r.ReplaceAllFunc(value, func(s []byte) []byte {
 		m := string(s)
