@@ -21,6 +21,7 @@ import (
 	"github.com/cloud66/habitus/squash"
 	"github.com/dchest/uniuri"
 	"github.com/docker/docker/builder/dockerfile/parser"
+	"github.com/dustin/go-humanize"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/satori/go.uuid"
 )
@@ -238,6 +239,19 @@ func (b *Builder) BuildStep(step *Step) error {
 		OutputStream:        os.Stdout, // TODO: use a multi writer to get a stream out for the API
 		ContextDir:          b.Conf.Workdir,
 		BuildArgs:           buildArgs,
+	}
+
+	if b.Conf.DockerCPUSetCPUs != "" {
+		opts.CPUSetCPUs = b.Conf.DockerCPUSetCPUs
+	}
+
+	if b.Conf.DockerMemory != "" {
+		// convery to int64
+		memory, err := humanize.ParseBytes(b.Conf.DockerMemory)
+		if err != nil {
+			return err
+		}
+		opts.Memory = int64(memory)
 	}
 
 	if b.auth != nil {
@@ -675,7 +689,7 @@ func dumpDockerfile(node *parser.Node) string {
 	}
 
 	for _, n := range node.Children {
-		if (n.Value == "cmd") {
+		if n.Value == "cmd" {
 			//keep the old cmd
 			str += n.Original + "\n"
 		} else {

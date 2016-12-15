@@ -38,6 +38,8 @@ type Config struct {
 	ApiBinding          string
 	SecretService       bool
 	SecretProviders     string
+	DockerMemory        string
+	DockerCPUSetCPUs    string
 }
 
 func (i *TupleArray) String() string {
