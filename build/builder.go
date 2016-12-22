@@ -239,6 +239,7 @@ func (b *Builder) BuildStep(step *Step) error {
 		OutputStream:        os.Stdout, // TODO: use a multi writer to get a stream out for the API
 		ContextDir:          b.Conf.Workdir,
 		BuildArgs:           buildArgs,
+		CPUShares:           int64(b.Conf.DockerCPUShares),
 	}
 
 	if b.Conf.DockerCPUSetCPUs != "" {

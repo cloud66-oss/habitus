@@ -40,6 +40,7 @@ type Config struct {
 	SecretProviders     string
 	DockerMemory        string
 	DockerCPUSetCPUs    string
+	DockerCPUShares     int
 }
 
 func (i *TupleArray) String() string {
