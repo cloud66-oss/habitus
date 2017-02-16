@@ -21,6 +21,7 @@ import (
 	"github.com/cloud66/habitus/squash"
 	"github.com/dchest/uniuri"
 	"github.com/docker/docker/builder/dockerfile/parser"
+	"github.com/dustin/go-humanize"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/satori/go.uuid"
 )
@@ -238,6 +239,20 @@ func (b *Builder) BuildStep(step *Step) error {
 		OutputStream:        os.Stdout, // TODO: use a multi writer to get a stream out for the API
 		ContextDir:          b.Conf.Workdir,
 		BuildArgs:           buildArgs,
+		CPUShares:           int64(b.Conf.DockerCPUShares),
+	}
+
+	if b.Conf.DockerCPUSetCPUs != "" {
+		opts.CPUSetCPUs = b.Conf.DockerCPUSetCPUs
+	}
+
+	if b.Conf.DockerMemory != "" {
+		// convery to int64
+		memory, err := humanize.ParseBytes(b.Conf.DockerMemory)
+		if err != nil {
+			return err
+		}
+		opts.Memory = int64(memory)
 	}
 
 	if b.auth != nil {
@@ -603,7 +618,6 @@ func (b *Builder) copyToHost(a *Artifact, container string, perms map[string]int
 	}
 
 	// create artifact file on the host
-	destFile := path.Join(destPath, filepath.Base(a.Source))
 	tr := tar.NewReader(&out)
 	for {
 		hdr, err := tr.Next()
@@ -615,7 +629,11 @@ func (b *Builder) copyToHost(a *Artifact, container string, perms map[string]int
 			return err
 		}
 
+		destFile := path.Join(destPath, hdr.Name)
 		switch hdr.Typeflag {
+		case tar.TypeDir:
+			_ = os.MkdirAll(destFile, os.FileMode(hdr.Mode))
+			os.Chown(destFile, hdr.Uid, hdr.Gid)
 		case tar.TypeReg:
 			b.Conf.Logger.Infof("Copying from %s to %s", a.Source, destFile)
 
@@ -628,15 +646,17 @@ func (b *Builder) copyToHost(a *Artifact, container string, perms map[string]int
 			if _, err := io.Copy(dest, tr); err != nil {
 				return err
 			}
+
 		default:
 			return errors.New("Invalid header type")
 		}
-	}
 
-	b.Conf.Logger.Debugf("Setting file permissions for %s to %d", destFile, perms[a.Source])
-	err = os.Chmod(destFile, os.FileMode(perms[a.Source])|0700)
-	if err != nil {
-		return err
+		b.Conf.Logger.Debugf("Setting file permissions for %s to %d", destFile, perms[a.Source])
+		err = os.Chmod(destFile, os.FileMode(perms[a.Source])|0700)
+		if err != nil {
+			return err
+		}
+
 	}
 
 	return nil
@@ -675,7 +695,7 @@ func dumpDockerfile(node *parser.Node) string {
 	}
 
 	for _, n := range node.Children {
-		if (n.Value == "cmd") {
+		if n.Value == "cmd" {
 			//keep the old cmd
 			str += n.Original + "\n"
 		} else {

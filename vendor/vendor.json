@@ -1,0 +1,13 @@
+{
+	"comment": "",
+	"ignore": "",
+	"package": [
+		{
+			"checksumSHA1": "TVmA3MU1a5seMGVsRIZjdGdqpho=",
+			"path": "github.com/dustin/go-humanize",
+			"revision": "ef638b6c2e62b857442c6443dace9366a48c0ee2",
+			"revisionTime": "2016-12-02T10:26:34Z"
+		}
+	],
+	"rootPath": "github.com/cloud66/habitus"
+}
