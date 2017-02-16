@@ -82,11 +82,15 @@ If you wish to work on the Habitus project itself. We provided a docker-compose.
     # docker-compose run habitus /bin/bash
     # go build
 
+After the build, you can use Habitus to build itself using the following command in the running container:
+
+    # ./habitus --use-tls=false --host=unix://var/run/docker.sock --secrets=false    
+
 You can run tests by typing 
 
 
     # docker-compose run habitus /bin/bash
-    # go test
+    # go test    
 
 And you are ready to start your contribution to Habitus. 
 
