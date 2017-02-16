@@ -551,7 +551,7 @@ func (b *Builder) replaceFromField(step *Step) error {
 	}
 	defer rwc.Close()
 
-	d := parser.Directive{LookingForDirectives: true}
+	d := parser.Directive{LookingForDirectives: false}
 	parser.SetEscapeToken(parser.DefaultEscapeToken, &d)
 	node, err := parser.Parse(rwc, &d)
 	if err != nil {
@@ -695,8 +695,8 @@ func dumpDockerfile(node *parser.Node) string {
 	}
 
 	for _, n := range node.Children {
-		if n.Value == "cmd" {
-			//keep the old cmd
+		if n.Value == "cmd" ||  n.Value == "env" {
+			//keep the old cmd or env
 			str += n.Original + "\n"
 		} else {
 			str += dumpDockerfile(n) + "\n"
