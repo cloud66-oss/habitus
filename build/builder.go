@@ -618,7 +618,6 @@ func (b *Builder) copyToHost(a *Artifact, container string, perms map[string]int
 	}
 
 	// create artifact file on the host
-	destFile := path.Join(destPath, filepath.Base(a.Source))
 	tr := tar.NewReader(&out)
 	for {
 		hdr, err := tr.Next()
@@ -630,7 +629,11 @@ func (b *Builder) copyToHost(a *Artifact, container string, perms map[string]int
 			return err
 		}
 
+		destFile := path.Join(destPath, hdr.Name)
 		switch hdr.Typeflag {
+		case tar.TypeDir:
+			_ = os.MkdirAll(destFile, os.FileMode(hdr.Mode))
+			os.Chown(destFile, hdr.Uid, hdr.Gid)
 		case tar.TypeReg:
 			b.Conf.Logger.Infof("Copying from %s to %s", a.Source, destFile)
 
@@ -643,15 +646,17 @@ func (b *Builder) copyToHost(a *Artifact, container string, perms map[string]int
 			if _, err := io.Copy(dest, tr); err != nil {
 				return err
 			}
+
 		default:
 			return errors.New("Invalid header type")
 		}
-	}
 
-	b.Conf.Logger.Debugf("Setting file permissions for %s to %d", destFile, perms[a.Source])
-	err = os.Chmod(destFile, os.FileMode(perms[a.Source])|0700)
-	if err != nil {
-		return err
+		b.Conf.Logger.Debugf("Setting file permissions for %s to %d", destFile, perms[a.Source])
+		err = os.Chmod(destFile, os.FileMode(perms[a.Source])|0700)
+		if err != nil {
+			return err
+		}
+
 	}
 
 	return nil
