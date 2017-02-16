@@ -13,7 +13,7 @@ import (
 )
 
 // The current version of bugsnag-go.
-const VERSION = "1.0.3"
+const VERSION = "1.1.1"
 
 var once sync.Once
 var middleware middlewareStack
