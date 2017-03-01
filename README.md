@@ -5,7 +5,7 @@ Habitus adds workflows to Docker build. This means you can create a chain of bui
 
 - Website: http://www.habitus.io/
 - [Download Habitus](https://github.com/cloud66/habitus/releases?utm_source=Githubdownload&utm_medium=GHDpage&utm_campaign=habitus)
-- Slack Channel: https://cloud66ers.slack.com/messages/habitus/ (you need a Cloud 66 account, and use this [link](https://app.cloud66.com/accounts/join_slack_channel) to get an invite)
+- Slack Channel: [#habitus](https://cloud66ers.slack.com/messages/habitus/), you need a Cloud 66 account, and use this [link](https://app.cloud66.com/accounts/join_slack_channel) to get an invite.
 - Articles: http://blog.cloud66.com/tag/habitus/
 
 ![Logo habitus](https://lh5.googleusercontent.com/_PbaTkJhpA9zVRW_pj3Mt1ntpAZ6IUjTn0yDkVCsUZnJnE3jAxr5ciGF5SqdtR45--EHlIdYyr3dj7DcjRVfLBSS6BQPaGrwzzvMqqEcDJc47sDY4d2s9QQlJi3ZXUYPkODWOF2a)
