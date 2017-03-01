@@ -20,7 +20,6 @@ import (
 	"github.com/cloud66/habitus/configuration"
 	"github.com/cloud66/habitus/squash"
 	"github.com/dchest/uniuri"
-	"github.com/docker/docker/builder/dockerfile/parser"
 	"github.com/dustin/go-humanize"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/satori/go.uuid"
@@ -551,39 +550,34 @@ func (b *Builder) replaceFromField(step *Step) error {
 	}
 	defer rwc.Close()
 
-	d := parser.Directive{LookingForDirectives: false}
-	parser.SetEscapeToken(parser.DefaultEscapeToken, &d)
-	node, err := parser.Parse(rwc, &d)
+	buffer, err := ioutil.ReadAll(rwc)
 	if err != nil {
 		return err
 	}
 
-	for _, child := range node.Children {
-		if child.Value == "from" {
-			// found it. is it from anyone we know?
-			if child.Next == nil {
-				return errors.New("invalid Dockerfile. No valid FROM found")
-			}
 
-			imageName := child.Next.Value
-			found, err := step.Manifest.FindStepByName(imageName)
-			if err != nil {
-				return err
-			}
-
-			if found != nil {
-				child.Next.Value = b.uniqueStepName(found)
-			}
-		}
+	fromTag := regexp.MustCompile("FROM (.*)")
+	if !fromTag.Match(buffer) {
+		return errors.New("invalid Dockerfile. No valid FROM found")
 	}
 
-	// did it have any effect?
+	imageNameAsBytes := fromTag.FindAllSubmatch(buffer, -1)
+	imageName := string(imageNameAsBytes[0][1])
+	found, err := step.Manifest.FindStepByName(imageName)
+	if err != nil {
+		return err
+	}
+
+	if found != nil {
+		uniqueStepName := b.uniqueStepName(found)
+		buffer = fromTag.ReplaceAll(buffer, []byte("FROM " + uniqueStepName))
+	}
+
 	b.Conf.Logger.Debugf("Writing the new Dockerfile into %s", step.Dockerfile+".generated")
-	err = ioutil.WriteFile(b.uniqueDockerfile(step), []byte(dumpDockerfile(node)), 0644)
+	err = ioutil.WriteFile(b.uniqueDockerfile(step), buffer, 0644)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -684,36 +678,6 @@ func (b *Builder) createContainer(step *Step) (*docker.Container, error) {
 	}
 
 	return container, nil
-}
-
-func dumpDockerfile(node *parser.Node) string {
-	str := ""
-	str += node.Value
-
-	if len(node.Flags) > 0 {
-		str += fmt.Sprintf(" %q", node.Flags)
-	}
-
-	for _, n := range node.Children {
-		if n.Value == "cmd" ||  n.Value == "env" {
-			//keep the old cmd or env
-			str += n.Original + "\n"
-		} else {
-			str += dumpDockerfile(n) + "\n"
-		}
-	}
-
-	if node.Next != nil {
-		for n := node.Next; n != nil; n = n.Next {
-			if len(n.Children) > 0 {
-				str += " " + dumpDockerfile(n)
-			} else {
-				str += " " + n.Value
-			}
-		}
-	}
-
-	return strings.TrimSpace(str)
 }
 
 func (b *Builder) uniqueDockerfile(step *Step) string {

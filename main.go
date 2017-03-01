@@ -36,6 +36,8 @@ func init() {
 	})
 }
 
+const DEFAULT_DOCKER_HOST = "unix://var/run/docker.sock"
+
 func main() {
 	args := os.Args[1:]
 	defer bugsnag.AutoNotify()
@@ -53,13 +55,19 @@ func main() {
 	flag.StringVar(&config.UniqueID, "uid", "", "Unique ID for the build. Used only for multi-tenanted build environments")
 	flag.StringVar(&flagLevel, "level", "debug", "Log level: debug, info, notice, warning, error and critical")
 	flag.BoolVar(&flagPrettyLog, "pretty", true, "Display logs with color and formatting")
-	flag.StringVar(&config.DockerHost, "host", os.Getenv("DOCKER_HOST"), "Docker host link. Uses DOCKER_HOST if missing")
+	
+	dockerhost, ok := os.LookupEnv("DOCKER_HOST")
+	if !ok {
+		dockerhost = DEFAULT_DOCKER_HOST
+	} 
+	
+	flag.StringVar(&config.DockerHost, "host", dockerhost, "Docker host link. Uses DOCKER_HOST if missing.")
 	flag.StringVar(&config.DockerCert, "certs", os.Getenv("DOCKER_CERT_PATH"), "Docker cert folder. Uses DOCKER_CERT_PATH if missing")
 	flag.Var(&config.EnvVars, "env", "Environment variables to be used during build. Uses parent process environment variables if empty")
 	flag.Var(&config.BuildArgs, "build", "Build arguments to be used during build.")
 	flag.BoolVar(&config.KeepSteps, "keep-all", false, "Overrides the keep flag for all steps. Used for debugging")
 	flag.BoolVar(&config.KeepArtifacts, "keep-artifacts", false, "Keep the temporary artifacts created on the host during build. Used for debugging")
-	flag.BoolVar(&config.UseTLS, "use-tls", true, "Uses TLS connection with Docker daemon")
+	flag.BoolVar(&config.UseTLS, "use-tls", false, "Uses TLS connection with Docker daemon")
 	flag.BoolVar(&config.NoSquash, "no-cleanup", false, "Skip cleanup commands for this run. Used for debugging")
 	flag.BoolVar(&config.FroceRmImages, "force-rmi", false, "Force remove of unwanted images")
 	flag.BoolVar(&config.NoPruneRmImages, "noprune-rmi", false, "No pruning of unwanted images")
@@ -67,7 +75,7 @@ func main() {
 	flag.BoolVar(&flagShowVersion, "version", false, "Display version information")
 	flag.IntVar(&config.ApiPort, "port", 8080, "Port to server the API")
 	flag.StringVar(&config.ApiBinding, "binding", "192.168.99.1", "Network address to bind the API to. (see documentation for more info)")
-	flag.BoolVar(&config.SecretService, "secrets", true, "Turn Secrets Service on or off")
+	flag.BoolVar(&config.SecretService, "secrets", false, "Turn Secrets Service on or off")
 	flag.StringVar(&config.SecretProviders, "sec-providers", "file", "All available secret providers. Comma separated")
 	flag.StringVar(&config.DockerMemory, "docker-memory", "", "Memory limits to apply to Docker build operations. More: https://docs.docker.com/engine/reference/commandline/build")
 	flag.StringVar(&config.DockerCPUSetCPUs, "docker-cpuset-cpus", "", "CPU binding limits to apply to Docker build operations. More: https://docs.docker.com/engine/reference/commandline/build")
