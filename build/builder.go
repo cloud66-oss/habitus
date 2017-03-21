@@ -461,7 +461,9 @@ func (b *Builder) BuildStep(step *Step) error {
 		// any commands to run?
 		if step.Command != "" {
 			b.Conf.Logger.Noticef("Starting container %s to run commands", container.ID)
-			startOpts := &docker.HostConfig{}
+			startOpts := &docker.HostConfig{
+				Binds: step.Mounts,
+			}
 
 			err := b.docker.StartContainer(container.ID, startOpts)
 			if err != nil {
@@ -555,7 +557,6 @@ func (b *Builder) replaceFromField(step *Step) error {
 		return err
 	}
 
-
 	fromTag := regexp.MustCompile("FROM (.*)")
 	if !fromTag.Match(buffer) {
 		return errors.New("invalid Dockerfile. No valid FROM found")
@@ -570,7 +571,7 @@ func (b *Builder) replaceFromField(step *Step) error {
 
 	if found != nil {
 		uniqueStepName := b.uniqueStepName(found)
-		buffer = fromTag.ReplaceAll(buffer, []byte("FROM " + uniqueStepName))
+		buffer = fromTag.ReplaceAll(buffer, []byte("FROM "+uniqueStepName))
 	}
 
 	b.Conf.Logger.Debugf("Writing the new Dockerfile into %s", step.Dockerfile+".generated")
@@ -657,6 +658,13 @@ func (b *Builder) copyToHost(a *Artifact, container string, perms map[string]int
 }
 
 func (b *Builder) createContainer(step *Step) (*docker.Container, error) {
+	var empty struct{}
+	mounts := make(map[string]struct{})
+	for _, m := range step.Mounts {
+		items := strings.Split(m, ":")
+		mounts[items[1]] = empty
+	}
+
 	config := docker.Config{
 		AttachStdout: true,
 		AttachStdin:  false,
@@ -664,6 +672,7 @@ func (b *Builder) createContainer(step *Step) (*docker.Container, error) {
 		Image:        b.uniqueStepName(step),
 		Cmd:          []string{"/bin/bash"},
 		Tty:          true,
+		Volumes:      mounts,
 	}
 
 	r, _ := regexp.Compile("/?[^a-zA-Z0-9_-]+")

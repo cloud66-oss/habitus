@@ -49,6 +49,7 @@ type Step struct {
 	DependsOn  []*Step
 	Command    string
 	Secrets    []Secret
+	Mounts     []string
 }
 
 // Manifest Holds the whole build process
@@ -78,6 +79,7 @@ type step struct {
 	DependsOn  []string          `yaml:"depends_on"`
 	Command    string            `yaml:"command"`
 	Secrets    map[string]secret `yaml:"secrets"`
+	Mounts     []string          `yaml:"mounts"`
 }
 
 // This is loaded from the build.yml file
@@ -138,6 +140,7 @@ func (n *namespace) convertToBuild(version string) (*Manifest, error) {
 		convertedStep.Label = name
 		convertedStep.Artifacts = []Artifact{}
 		convertedStep.Command = s.Command
+		convertedStep.Mounts = s.Mounts
 		if s.Cleanup != nil && !n.Config.NoSquash {
 			convertedStep.Cleanup = &Cleanup{Commands: s.Cleanup.Commands}
 			r.IsPrivileged = true

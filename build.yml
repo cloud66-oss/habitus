@@ -5,7 +5,9 @@ build:
     tester:
       name: tester
       dockerfile: Dockerfile.tester
-      command: go test
+      command: cat /tmp/htpasswd_1
+      mounts:
+        - /tmp:/tmp
     crosscompile:
       name: crosscompile
       depends_on:
