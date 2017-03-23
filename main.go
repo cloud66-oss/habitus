@@ -8,6 +8,7 @@ import (
 
 	"github.com/cloud66/habitus/build"
 	"github.com/cloud66/habitus/configuration"
+	"github.com/cloud66/habitus/api"
 	"github.com/op/go-logging"
 
 	"github.com/bugsnag/bugsnag-go"
@@ -137,13 +138,14 @@ func main() {
 
 	if config.SecretService {
 		// start the API
-		api := &server{builder: b}
-		err = api.StartServer()
+		secret_service := &api.Server{Builder: b}
+		err = secret_service.StartServer(VERSION)
 		if err != nil {
 			log.Fatalf("Cannot start API server due to %s", err.Error())
 			os.Exit(2)
 		}
 	}
+
 
 	err = b.StartBuild()
 	if err != nil {
