@@ -36,7 +36,7 @@ func init() {
 	})
 }
 
-const DEFAULT_DOCKER_HOST = "unix://var/run/docker.sock"
+const DEFAULT_DOCKER_HOST = "unix:///var/run/docker.sock"
 
 func main() {
 	args := os.Args[1:]
