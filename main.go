@@ -146,7 +146,6 @@ func main() {
 		}
 	}
 
-
 	err = b.StartBuild()
 	if err != nil {
 		log.Errorf("Error during build %s", err.Error())

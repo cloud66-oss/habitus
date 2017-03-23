@@ -1,2 +1,18 @@
+# a build.yml to build Habitus cross-platform using Habitus
 build:
   version: 2016-03-14
+  steps:
+    step1:
+      name: step1x
+      dockerfile: Dockerfile
+    step2:
+      name: step2x
+      dockerfile: Dockerfile
+      depends_on:
+        - step1
+    step3:
+      name: step3x
+      dockerfile: Dockerfile
+      depends_on:
+        - step1
+        - step2
