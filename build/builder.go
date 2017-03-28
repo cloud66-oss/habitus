@@ -112,7 +112,7 @@ func (b *Builder) StartBuild() error {
 	b.Conf.Logger.Debugf("Building %d steps", len(b.Build.Steps))
 	for i, levels := range b.Build.buildLevels {
 		for j, s := range levels {
-				b.Conf.Logger.Debugf("Step %d - step_name %s: name = %s", i + j, s.Label, s.Name)
+				b.Conf.Logger.Debugf("Step %d - step_name %s: name = '%s'", i + j, s.Label, s.Name)
 		}
 	}
 
@@ -221,7 +221,7 @@ func (b *Builder) uniqueStepName(step *Step) string {
 
 // BuildStep builds a single step
 func (b *Builder) BuildStep(step *Step, step_number int) error {
-	b.Conf.Logger.Noticef("Step %d - Building %s", step_number, step.Name)
+	b.Conf.Logger.Noticef("Step %d - Building %s from context '%s'", step_number, step.Name, b.Conf.Workdir)
 	// fix the Dockerfile
 	err := b.replaceFromField(step, step_number)
 	if err != nil {
@@ -234,10 +234,10 @@ func (b *Builder) BuildStep(step *Step, step_number int) error {
 	}
 	// call Docker to build the Dockerfile (from the parsed file)
 
-	b.Conf.Logger.Infof("Step %d - Building the %s image from %s", step_number, b.uniqueStepName(step), filepath.Base(b.uniqueDockerfile(step)))
+	b.Conf.Logger.Infof("Step %d - Building the %s image from %s", step_number, b.uniqueStepName(step), step.Dockerfile+".generated")
 	opts := docker.BuildImageOptions{
 		Name:                b.uniqueStepName(step),
-		Dockerfile:          filepath.Base(b.uniqueDockerfile(step)),
+		Dockerfile:          step.Dockerfile+".generated",
 		NoCache:             b.Conf.NoCache,
 		SuppressOutput:      b.Conf.SuppressOutput,
 		RmTmpContainer:      b.Conf.RmTmpContainers,
@@ -580,7 +580,7 @@ func (b *Builder) replaceFromField(step *Step, step_number int) error {
 		buffer = fromTag.ReplaceAll(buffer, []byte("FROM " + uniqueStepName))
 	}
 
-	b.Conf.Logger.Debugf("Step %d - Writing the new Dockerfile into %s", step_number, step.Dockerfile+".generated")
+	b.Conf.Logger.Debugf("Step %d - Writing the new Dockerfile into '%s'", step_number, b.uniqueDockerfile(step))
 	err = ioutil.WriteFile(b.uniqueDockerfile(step), buffer, 0644)
 	if err != nil {
 		return err
