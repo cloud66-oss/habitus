@@ -3,6 +3,6 @@ build:
   version: 2016-03-14
   steps:
     step1:
-      name: _env(NAME)
+      name: step
       dockerfile: Dockerfile
       command: env
