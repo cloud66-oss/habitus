@@ -64,8 +64,8 @@ func main() {
 	
 	flag.StringVar(&config.DockerHost, "host", dockerhost, "Docker host link. Uses DOCKER_HOST if missing.")
 	flag.StringVar(&config.DockerCert, "certs", os.Getenv("DOCKER_CERT_PATH"), "Docker cert folder. Uses DOCKER_CERT_PATH if missing")
-	flag.Var(&config.EnvVars, "env", "Environment variables to be used during build. Uses parent process environment variables if empty")
-	flag.Var(&config.BuildArgs, "build", "Build arguments to be used during build.")
+	flag.Var(&config.EnvVars, "env", "Environment variables to be used in the build.yml. Uses parent process environment variables if empty")
+	flag.Var(&config.BuildArgs, "build", "Build arguments to be used during each Dockerfile build step.")
 	flag.BoolVar(&config.KeepSteps, "keep-all", false, "Overrides the keep flag for all steps. Used for debugging")
 	flag.BoolVar(&config.KeepArtifacts, "keep-artifacts", false, "Keep the temporary artifacts created on the host during build. Used for debugging")
 	flag.BoolVar(&config.UseTLS, "use-tls", false, "Uses TLS connection with Docker daemon")
