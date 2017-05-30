@@ -44,7 +44,7 @@ type Step struct {
 	Label      string
 	Dockerfile string
 	Artifacts  []Artifact
-	Manifest   Manifest
+	Manifest   *Manifest
 	Cleanup    *Cleanup
 	DependsOn  []*Step
 	Command    string
@@ -121,20 +121,20 @@ func LoadBuildFromFile(config *configuration.Config) (*Manifest, error) {
 }
 
 func (n *namespace) convertToBuild(version string) (*Manifest, error) {
-	r := Manifest{
+	manifest := Manifest{
 		SecretProviders: make(map[string]secrets.SecretProvider),
 	}
-	r.SecretProviders["file"] = &secrets.FileProvider{}
-	r.SecretProviders["env"] = &secrets.EnvProvider{}
+	manifest.SecretProviders["file"] = &secrets.FileProvider{}
+	manifest.SecretProviders["env"] = &secrets.EnvProvider{}
 
 
-	r.IsPrivileged = false
-	r.Steps = []Step{}
+	manifest.IsPrivileged = false
+	manifest.Steps = []Step{}
 
 	for name, s := range n.BuildConfig.Steps {
 		convertedStep := Step{}
 
-		convertedStep.Manifest = r
+		convertedStep.Manifest = &manifest
 		convertedStep.Dockerfile = s.Dockerfile
 		convertedStep.Name = s.Name
 		convertedStep.Label = name
@@ -142,7 +142,7 @@ func (n *namespace) convertToBuild(version string) (*Manifest, error) {
 		convertedStep.Command = s.Command
 		if s.Cleanup != nil && !n.Config.NoSquash {
 			convertedStep.Cleanup = &Cleanup{Commands: s.Cleanup.Commands}
-			r.IsPrivileged = true
+			manifest.IsPrivileged = true
 		} else {
 			convertedStep.Cleanup = &Cleanup{}
 		}
@@ -162,7 +162,7 @@ func (n *namespace) convertToBuild(version string) (*Manifest, error) {
 					return nil, fmt.Errorf("Unsupported type '%s'", s.Type)
 				}
 
-				r.SecretProviders[s.Type].RegisterSecret(name, s.Value)
+				manifest.SecretProviders[s.Type].RegisterSecret(name, s.Value)
 
 				convertedStep.Secrets = append(convertedStep.Secrets, convertedSecret)
 			}
@@ -185,21 +185,21 @@ func (n *namespace) convertToBuild(version string) (*Manifest, error) {
 		}
 
 		// is it unique?
-		for _, s := range r.Steps {
+		for _, s := range manifest.Steps {
 			if s.Name == convertedStep.Name {
 				return nil, fmt.Errorf("Step name '%s' is not unique", convertedStep.Name)
 			}
 		}
 
-		r.Steps = append(r.Steps, convertedStep)
+		manifest.Steps = append(manifest.Steps, convertedStep)
 	}
 
 	// now that we have the Manifest built from the file, we can resolve dependencies
-	for idx, step := range r.Steps {
+	for idx, step := range manifest.Steps {
 		bStep := n.BuildConfig.Steps[step.Label]
 
 		for _, d := range bStep.DependsOn {
-			convertedStep, err := r.FindStepByLabel(d)
+			convertedStep, err := manifest.FindStepByLabel(d)
 			if err != nil {
 				return nil, err
 			}
@@ -207,18 +207,18 @@ func (n *namespace) convertToBuild(version string) (*Manifest, error) {
 				return nil, fmt.Errorf("can't find step %s", d)
 			}
 
-			r.Steps[idx].DependsOn = append(r.Steps[idx].DependsOn, convertedStep)
+			manifest.Steps[idx].DependsOn = append(manifest.Steps[idx].DependsOn, convertedStep)
 		}
 	}
 
 	// build the dependency tree
-	bl, err := r.serviceOrder(r.Steps)
+	bl, err := manifest.serviceOrder(manifest.Steps)
 	if err != nil {
 		return nil, err
 	}
-	r.buildLevels = bl
+	manifest.buildLevels = bl
 
-	return &r, nil
+	return &manifest, nil
 }
 
 func (m *Manifest) getStepsByLevel(level int) ([]Step, error) {

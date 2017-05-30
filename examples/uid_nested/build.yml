@@ -1,0 +1,16 @@
+build:
+    version: 2016-03-14
+    steps:
+      base:
+        name: base
+        dockerfile: Dockerfile.base
+      compilation:
+        name: compilation
+        dockerfile: Dockerfile.compile
+        depends_on:
+          - base
+      runtime:
+        name: runtime
+        dockerfile: Dockerfile.runtime
+        depends_on:
+          - compilation
