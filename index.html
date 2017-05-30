@@ -168,19 +168,31 @@ build:
 
 <ul>
   <li>Name: Name is what the build will refer to this secret as. In this example the name is <code>id_rsa</code></li>
-  <li>Type: Currently only <code>file</code> is supported as <code>type</code> which means Habitus only supports secrets stored in a file.</li>
-  <li>Value: Value depends on the <code>type</code>. For <code>file</code>, <code>value</code> is the path to the file holding the secret on the build host (ie. your laptop or build server).</li>
+  <li>Type: Currently we support <code>file</code> and <code>env</code> as <code>type</code>.  Which means Habitus supports secrets stored in a file or expose an environment variable from the host.</li>
+  <li>Value: Value depends on the <code>type</code>. For <code>file</code>, <code>value</code> is the path to the file holding the secret on the build host (ie. your laptop or build server). For <code>env</code>, <code>value</code> is the name of the environment variable taken from your build host (ie. your laptop or build server)</li>
 </ul>
+
 
 <pre>
   <code>
 secrets:
-        id_rsa:
-          type: file
-          value: _env(HOME)/.ssh/my_private_key
+  id_rsa:
+    type: file
+    value: _env(HOME)/.ssh/my_private_key
   </code>
 </pre>
+      <p>Check <a href="https://github.com/cloud66/habitus/tree/master/examples/security">here</a> for an example using file secrets.</p>
 
+
+      <pre>
+  <code>
+secrets:
+  exposed_secret_env:
+    type: env
+    value: SECRET_KEY
+  </code>
+</pre>
+      <p>Check <a href="https://github.com/cloud66/habitus/tree/master/examples/security_env">here</a> for an example using environment variable secrets.</p>
 
 <h5>Habitus IP address</h5>
 <p>Finding the correct IP address to server Habitus API (and secrets) on can be tricky. You don't want to bind it to <code>0.0.0.0</code> since it will make Habitus and your secrets available to your entire local network (and possibly the internet if you're running a tunnel) during the build time.</p>
