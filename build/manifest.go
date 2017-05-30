@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	validTypes = []string{"file"}
+	validTypes = []string{"file","env"}
 )
 
 // Artifact holds a parsed source for a build artifact
@@ -125,6 +125,8 @@ func (n *namespace) convertToBuild(version string) (*Manifest, error) {
 		SecretProviders: make(map[string]secrets.SecretProvider),
 	}
 	r.SecretProviders["file"] = &secrets.FileProvider{}
+	r.SecretProviders["env"] = &secrets.EnvProvider{}
+
 
 	r.IsPrivileged = false
 	r.Steps = []Step{}

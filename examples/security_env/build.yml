@@ -1,0 +1,10 @@
+build:
+  version: 2016-03-14
+  steps:
+    builder:
+      name: builder
+      dockerfile: Dockerfile
+      secrets:
+        my_env_secret:
+          type: env
+          value: HOME
