@@ -688,7 +688,11 @@ func (b *Builder) createContainer(step *Step) (*docker.Container, error) {
 }
 
 func (b *Builder) uniqueDockerfileName(step *Step) string {
-	return step.Dockerfile + "_" + b.UniqueID + ".generated"
+	if b.UniqueID != "" {
+		return step.Dockerfile + "_" + b.UniqueID + ".generated"
+	}  else {
+	 	return step.Dockerfile + ".generated"
+	}
 }
 
 func (b *Builder) uniqueDockerfile(step *Step) string {
