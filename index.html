@@ -158,11 +158,11 @@ build:
 
 <p>You notice that here we are using the Build Arguments in the Dockerfile with <code>ARG</code>. This allows us to pass in the Habitus IP address into the container without saving it into the image. You can pass in Build Arguments into Habitus with <code>--build</code> parameter:</p>
 
-<p><kbd>$ habitus --build host=192.168.99.1</kbd></p>
+<p><kbd>$ habitus --build host=192.168.99.1 --secrets=true --binding=192.168.99.1</kbd></p>
 
 <h5>Secret configuration</h5>
 
-<p><b>IMPORTANT</b>: Secrets are supported in Habitus 0.4 onward and only with <code>build.yml</code> schema versions on or more recent than <code>2016-03-14</code>.</p>
+<p><b>IMPORTANT</b>: Secrets are supported in Habitus 0.4 onward and only with <code>build.yml</code> schema versions on or more recent than <code>2016-03-14</code>. Make sure your are using the <kbd>--secrets=true</kbd> option to enable the secret service.</p>
 
 <p>You can define as many secrets for your build. Each secret has 3 attributes:</p>
 
@@ -200,7 +200,7 @@ secrets:
 
 <p>On a Mac, if your VM IP address is different from <code>192.168.99.1</code> you can configure Habitus using the <code>--binding</code> parameter:</p>
 
-<p><kbd>$ habitus --binding 10.0.99.1</kbd></p>
+<p><kbd>$ habitus --binding 10.0.99.1 --secrets=true</kbd></p>
 
 <p>You can also change the Habitus API port from the default <code>8080</code> using the <code>--port</code> parameter.</p>
 
@@ -297,7 +297,7 @@ artifacts:
 <li><code>port</code>: Port to server Habitus API on. Default is <code>8080</code></li>
 <li><code>rm</code>: Remove intermediate built images.</li>
 <li><code>sec-providers</code>: Comma separated list of secret provider types available during the build. Default is <code>file</code></li>
-<li><code>secrets</code>: Enable or disable support for secrets during build. Default is <code>true</code></li>
+<li><code>secrets</code>: Enable or disable support for secrets during build. Default is <code>false</code></li>
 <li><code>suppress</code>: Suppress docker build output.</li>
 <li><code>tls</code>: Use TLS to connect to the Docker daemon (default is true)</li>
 <li><code>uid</code>: A unique ID used for a build session to allow multi-tenancy of Habitus</li>
