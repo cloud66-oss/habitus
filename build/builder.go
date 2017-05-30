@@ -234,10 +234,10 @@ func (b *Builder) BuildStep(step *Step, step_number int) error {
 	}
 	// call Docker to build the Dockerfile (from the parsed file)
 
-	b.Conf.Logger.Infof("Step %d - Building the %s image from %s", step_number, b.uniqueStepName(step), step.Dockerfile+".generated")
+	b.Conf.Logger.Infof("Step %d - Building the %s image from %s", step_number, b.uniqueStepName(step), b.uniqueDockerfile(step))
 	opts := docker.BuildImageOptions{
 		Name:                b.uniqueStepName(step),
-		Dockerfile:          step.Dockerfile+".generated",
+		Dockerfile:          b.uniqueDockerfileName(step),
 		NoCache:             b.Conf.NoCache,
 		SuppressOutput:      b.Conf.SuppressOutput,
 		RmTmpContainer:      b.Conf.RmTmpContainers,
@@ -687,6 +687,10 @@ func (b *Builder) createContainer(step *Step) (*docker.Container, error) {
 	return container, nil
 }
 
+func (b *Builder) uniqueDockerfileName(step *Step) string {
+	return step.Dockerfile + "_" + b.UniqueID + ".generated"
+}
+
 func (b *Builder) uniqueDockerfile(step *Step) string {
-	return filepath.Join(b.Conf.Workdir, step.Dockerfile) + ".generated"
+	return filepath.Join(b.Conf.Workdir, b.uniqueDockerfileName(step))
 }

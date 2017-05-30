@@ -1,0 +1,11 @@
+build:
+ version: 2016-03-14 # version of the build schema.
+ steps:
+  builder:
+    name: builder
+    dockerfile: Dockerfile
+  production:
+    name: prodstuff
+    dockerfile: Dockerfile.production
+    depends_on:
+      - builder
