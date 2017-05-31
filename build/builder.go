@@ -540,7 +540,7 @@ func (b *Builder) BuildStep(step *Step, step_number int) error {
 		}
 	}
 
-	if step.AfterBuildCommand != "" {
+	if step.AfterBuildCommand != "" && b.Conf.AllowAfterBuildCommands {
 		b.Conf.Logger.Noticef("Step %d - Running command [%s] on host", step_number + 1, step.AfterBuildCommand)
 		stdoutStderr, err := exec.Command(step.AfterBuildCommand).CombinedOutput()
 		if err != nil {

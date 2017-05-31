@@ -77,6 +77,7 @@ func main() {
 	flag.IntVar(&config.ApiPort, "port", 8080, "Port to server the API")
 	flag.StringVar(&config.ApiBinding, "binding", "192.168.99.1", "Network address to bind the API to. (see documentation for more info)")
 	flag.BoolVar(&config.SecretService, "secrets", false, "Turn Secrets Service on or off")
+	flag.BoolVar(&config.AllowAfterBuildCommands, "after-build-commands", false, "Allow to run arbitrary commands on the host after build")
 	flag.StringVar(&config.SecretProviders, "sec-providers", "file,env", "All available secret providers. Comma separated")
 	flag.StringVar(&config.DockerMemory, "docker-memory", "", "Memory limits to apply to Docker build operations. More: https://docs.docker.com/engine/reference/commandline/build")
 	flag.StringVar(&config.DockerCPUSetCPUs, "docker-cpuset-cpus", "", "CPU binding limits to apply to Docker build operations. More: https://docs.docker.com/engine/reference/commandline/build")

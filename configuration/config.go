@@ -16,31 +16,32 @@ type TupleArray []TupleItem
 
 // Config stores application configurations
 type Config struct {
-	Buildfile           string
-	Workdir             string
-	NoCache             bool
-	SuppressOutput      bool
-	RmTmpContainers     bool
-	ForceRmTmpContainer bool
-	UniqueID            string
-	Logger              logging.Logger
-	DockerHost          string
-	DockerCert          string
-	EnvVars             TupleArray
-	BuildArgs           TupleArray
-	KeepSteps           bool
-	KeepArtifacts       bool
-	NoSquash            bool
-	NoPruneRmImages     bool
-	UseTLS              bool
-	FroceRmImages       bool
-	ApiPort             int
-	ApiBinding          string
-	SecretService       bool
-	SecretProviders     string
-	DockerMemory        string
-	DockerCPUSetCPUs    string
-	DockerCPUShares     int
+	Buildfile               string
+	Workdir                 string
+	NoCache                 bool
+	SuppressOutput          bool
+	RmTmpContainers         bool
+	ForceRmTmpContainer     bool
+	UniqueID                string
+	Logger                  logging.Logger
+	DockerHost              string
+	DockerCert              string
+	EnvVars                 TupleArray
+	BuildArgs               TupleArray
+	KeepSteps               bool
+	KeepArtifacts           bool
+	NoSquash                bool
+	NoPruneRmImages         bool
+	UseTLS                  bool
+	FroceRmImages           bool
+	ApiPort                 int
+	ApiBinding              string
+	SecretService           bool
+	AllowAfterBuildCommands bool
+	SecretProviders         string
+	DockerMemory            string
+	DockerCPUSetCPUs        string
+	DockerCPUShares         int
 }
 
 func (i *TupleArray) String() string {
