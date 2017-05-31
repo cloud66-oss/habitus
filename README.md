@@ -100,3 +100,7 @@ And you are ready to start your contribution to Habitus.
 ______________________________________________________________________________________________________
 - On a Linux machine where Docker can run natively you can bind Habitus to 127.0.0.1.
 - On a Mac (OSX) Docker runs inside of a VM (VirtualBox in most cases through Boot2Docker). This means you need to find the VM address of your Mac and use that to bind Habitus to. By default, Boot2Docker (and Docker Machine) use 192.168.99.1 which is what Habitus uses by default.
+
+### CHANGELOG
+
+Check the changelog [here](https://github.com/cloud66/habitus/blob/master/CHANGELOG.md)
