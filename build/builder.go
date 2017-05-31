@@ -113,17 +113,15 @@ func (b *Builder) StartBuild() error {
 	b.Conf.Logger.Debugf("Building %d steps", len(b.Build.Steps))
 	for i, levels := range b.Build.buildLevels {
 		for j, s := range levels {
-				b.Conf.Logger.Debugf("Step %d - %s, image-name = '%s'", i + j + 1, s.Label, b.uniqueStepName(&s))
+			b.Conf.Logger.Debugf("Step %d - %s, image-name = '%s'", i+j+1, s.Label, b.uniqueStepName(&s))
 		}
 	}
-
-
 
 	for i, levels := range b.Build.buildLevels {
 		for j, s := range levels {
 			b.wg.Add(1)
 			go func(st Step) {
-				b.Conf.Logger.Debugf("Step %d - Build for %s", i + j + 1, st.Name)
+				b.Conf.Logger.Debugf("Step %d - Build for %s", i+j+1, st.Name)
 				defer b.wg.Done()
 
 				err := b.BuildStep(&st, i+j)
@@ -156,10 +154,10 @@ func (b *Builder) StartBuild() error {
 
 	// Clear after yourself: images, containers, etc (optional for premium users)
 	// except last step
-	for i, levels := range b.Build.buildLevels  {
+	for i, levels := range b.Build.buildLevels {
 		for j, s := range levels {
 			if (j == len(levels)-1) && (i != len(b.Build.buildLevels)-1) {
-				b.Conf.Logger.Debugf("Step %d - Removing unwanted image %s", i + j + 1, b.uniqueStepName(&s))
+				b.Conf.Logger.Debugf("Step %d - Removing unwanted image %s", i+j+1, b.uniqueStepName(&s))
 				rmiOptions := docker.RemoveImageOptions{Force: b.Conf.FroceRmImages, NoPrune: b.Conf.NoPruneRmImages}
 				err := b.docker.RemoveImageExtended(b.uniqueStepName(&s), rmiOptions)
 				if err != nil {
@@ -222,7 +220,7 @@ func (b *Builder) uniqueStepName(step *Step) string {
 
 // BuildStep builds a single step
 func (b *Builder) BuildStep(step *Step, step_number int) error {
-	b.Conf.Logger.Noticef("Step %d - Building %s from context '%s'", step_number + 1, step.Name, b.Conf.Workdir)
+	b.Conf.Logger.Noticef("Step %d - Building %s from context '%s'", step_number+1, step.Name, b.Conf.Workdir)
 	// fix the Dockerfile
 	err := b.replaceFromField(step, step_number)
 	if err != nil {
@@ -235,11 +233,11 @@ func (b *Builder) BuildStep(step *Step, step_number int) error {
 	}
 	// call Docker to build the Dockerfile (from the parsed file)
 
-	b.Conf.Logger.Infof("Step %d - Building the %s image from %s", step_number + 1, b.uniqueStepName(step), b.uniqueDockerfile(step))
+	b.Conf.Logger.Infof("Step %d - Building the %s image from %s", step_number+1, b.uniqueStepName(step), b.uniqueDockerfile(step))
 	opts := docker.BuildImageOptions{
 		Name:                b.uniqueStepName(step),
 		Dockerfile:          b.uniqueDockerfileName(step),
-		NoCache:             b.Conf.NoCache,
+		NoCache:             b.Conf.NoCache || step.NoCache,
 		SuppressOutput:      b.Conf.SuppressOutput,
 		RmTmpContainer:      b.Conf.RmTmpContainers,
 		ForceRmTmpContainer: b.Conf.ForceRmTmpContainer,
@@ -524,8 +522,6 @@ func (b *Builder) BuildStep(step *Step, step_number int) error {
 			}
 		}
 
-
-
 		// remove the created container
 		removeOpts := docker.RemoveContainerOptions{
 			ID:            container.ID,
@@ -541,7 +537,7 @@ func (b *Builder) BuildStep(step *Step, step_number int) error {
 	}
 
 	if step.AfterBuildCommand != "" && b.Conf.AllowAfterBuildCommands {
-		b.Conf.Logger.Noticef("Step %d - Running command [%s] on host", step_number + 1, step.AfterBuildCommand)
+		b.Conf.Logger.Noticef("Step %d - Running command [%s] on host", step_number+1, step.AfterBuildCommand)
 		stdoutStderr, err := exec.Command(step.AfterBuildCommand).CombinedOutput()
 		if err != nil {
 			return err
@@ -561,7 +557,7 @@ func (b *Builder) BuildStep(step *Step, step_number int) error {
 // this replaces the FROM field in the Dockerfile to one with the previous step's unique name
 // it stores the parsed result Dockefile in uniqueSessionName file
 func (b *Builder) replaceFromField(step *Step, step_number int) error {
-	b.Conf.Logger.Noticef("Step %d - Parsing and converting '%s'", step_number + 1, step.Dockerfile)
+	b.Conf.Logger.Noticef("Step %d - Parsing and converting '%s'", step_number+1, step.Dockerfile)
 
 	rwc, err := os.Open(path.Join(b.Conf.Workdir, step.Dockerfile))
 	if err != nil {
@@ -573,7 +569,6 @@ func (b *Builder) replaceFromField(step *Step, step_number int) error {
 	if err != nil {
 		return err
 	}
-
 
 	fromTag := regexp.MustCompile("FROM (.*)")
 	if !fromTag.Match(buffer) {
@@ -589,10 +584,10 @@ func (b *Builder) replaceFromField(step *Step, step_number int) error {
 
 	if found != nil {
 		uniqueStepName := b.uniqueStepName(found)
-		buffer = fromTag.ReplaceAll(buffer, []byte("FROM " + uniqueStepName))
+		buffer = fromTag.ReplaceAll(buffer, []byte("FROM "+uniqueStepName))
 	}
 
-	b.Conf.Logger.Debugf("Step %d - Writing the new Dockerfile into '%s'", step_number + 1, b.uniqueDockerfile(step))
+	b.Conf.Logger.Debugf("Step %d - Writing the new Dockerfile into '%s'", step_number+1, b.uniqueDockerfile(step))
 	err = ioutil.WriteFile(b.uniqueDockerfile(step), buffer, 0644)
 	if err != nil {
 		return err
@@ -702,8 +697,8 @@ func (b *Builder) createContainer(step *Step) (*docker.Container, error) {
 func (b *Builder) uniqueDockerfileName(step *Step) string {
 	if b.UniqueID != "" {
 		return step.Dockerfile + "_" + b.UniqueID + ".generated"
-	}  else {
-	 	return step.Dockerfile + ".generated"
+	} else {
+		return step.Dockerfile + ".generated"
 	}
 }
 

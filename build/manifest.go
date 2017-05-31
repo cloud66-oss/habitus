@@ -49,6 +49,7 @@ type Step struct {
 	DependsOn  []*Step
 	Command    string
 	AfterBuildCommand string
+	NoCache		bool
 	Secrets    []Secret
 }
 
@@ -79,6 +80,7 @@ type step struct {
 	DependsOn  []string          `yaml:"depends_on"`
 	Command    string            `yaml:"command"`
 	AfterBuildCommand string 	 `yaml:"after_build_command"`
+	NoCache 	bool			 `yaml:"no_cache"`
 	Secrets    map[string]secret `yaml:"secrets"`
 }
 
@@ -143,6 +145,8 @@ func (n *namespace) convertToBuild(version string) (*Manifest, error) {
 		convertedStep.Artifacts = []Artifact{}
 		convertedStep.Command = s.Command
 		convertedStep.AfterBuildCommand = s.AfterBuildCommand
+		convertedStep.NoCache = s.NoCache
+
 		if s.Cleanup != nil && !n.Config.NoSquash {
 			convertedStep.Cleanup = &Cleanup{Commands: s.Cleanup.Commands}
 			manifest.IsPrivileged = true
