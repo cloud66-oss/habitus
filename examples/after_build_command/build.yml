@@ -1,0 +1,8 @@
+# a build.yml to build Habitus cross-platform using Habitus
+build:
+  version: 2016-03-14
+  steps:
+    step1:
+      name: step1
+      dockerfile: Dockerfile
+      after_build_command: pwd

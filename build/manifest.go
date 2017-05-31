@@ -48,6 +48,7 @@ type Step struct {
 	Cleanup    *Cleanup
 	DependsOn  []*Step
 	Command    string
+	AfterBuildCommand string
 	Secrets    []Secret
 }
 
@@ -77,6 +78,7 @@ type step struct {
 	Cleanup    *cleanup          `yaml:"cleanup"`
 	DependsOn  []string          `yaml:"depends_on"`
 	Command    string            `yaml:"command"`
+	AfterBuildCommand string 	 `yaml:"after_build_command"`
 	Secrets    map[string]secret `yaml:"secrets"`
 }
 
@@ -140,6 +142,7 @@ func (n *namespace) convertToBuild(version string) (*Manifest, error) {
 		convertedStep.Label = name
 		convertedStep.Artifacts = []Artifact{}
 		convertedStep.Command = s.Command
+		convertedStep.AfterBuildCommand = s.AfterBuildCommand
 		if s.Cleanup != nil && !n.Config.NoSquash {
 			convertedStep.Cleanup = &Cleanup{Commands: s.Cleanup.Commands}
 			manifest.IsPrivileged = true

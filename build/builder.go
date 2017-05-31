@@ -23,6 +23,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/satori/go.uuid"
+	"os/exec"
 )
 
 // Builder is a simple Dockerfile builder
@@ -523,6 +524,8 @@ func (b *Builder) BuildStep(step *Step, step_number int) error {
 			}
 		}
 
+
+
 		// remove the created container
 		removeOpts := docker.RemoveContainerOptions{
 			ID:            container.ID,
@@ -535,6 +538,15 @@ func (b *Builder) BuildStep(step *Step, step_number int) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	if step.AfterBuildCommand != "" {
+		b.Conf.Logger.Noticef("Step %d - Running command [%s] on host", step_number + 1, step.AfterBuildCommand)
+		stdoutStderr, err := exec.Command(step.AfterBuildCommand).CombinedOutput()
+		if err != nil {
+			return err
+		}
+		fmt.Printf("%s\n", stdoutStderr)
 	}
 
 	// clean up the parsed docker file. It will remain there if there was a problem
