@@ -13,7 +13,7 @@ NOTE: If you want to use the `no_cache` feature you must enable this for securit
 
 `habitus --after-build-command=true ...`\
 
-
+Download [V1.0.0-pre.1](https://github.com/cloud66/habitus/releases/tag/1.0.0-pre.1)
 
  
 
