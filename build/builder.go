@@ -13,7 +13,6 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 	"sync"
 
@@ -404,60 +403,9 @@ func (b *Builder) BuildStep(step *Step, step_number int) error {
 		}
 
 		if len(step.Artifacts) > 0 {
-			b.Conf.Logger.Noticef("Starting container %s to fetch artifact permissions", container.ID)
-			startOpts := &docker.HostConfig{}
-			err := b.docker.StartContainer(container.ID, startOpts)
-			if err != nil {
-				return err
-			}
-
-			permMap := make(map[string]int)
-
-			for _, art := range step.Artifacts {
-				execOpts := docker.CreateExecOptions{
-					Container:    container.ID,
-					AttachStdin:  false,
-					AttachStdout: true,
-					AttachStderr: true,
-					Tty:          false,
-					Cmd:          []string{"stat", "--format='%a'", art.Source},
-				}
-				execObj, err := b.docker.CreateExec(execOpts)
-				if err != nil {
-					return err
-				}
-
-				buf := new(bytes.Buffer)
-				startExecOpts := docker.StartExecOptions{
-					OutputStream: buf,
-					ErrorStream:  os.Stderr,
-					RawTerminal:  false,
-					Detach:       false,
-				}
-
-				if err := b.docker.StartExec(execObj.ID, startExecOpts); err != nil {
-					b.Conf.Logger.Errorf("Failed to fetch artifact permissions for %s: %s", art.Source, err.Error())
-				}
-
-				permsString := strings.Replace(strings.Replace(buf.String(), "'", "", -1), "\n", "", -1)
-				perms, err := strconv.Atoi(permsString)
-				if err != nil {
-					b.Conf.Logger.Errorf("Failed to fetch artifact permissions for %s: %s", art.Source, err.Error())
-				}
-				permMap[art.Source] = perms
-				b.Conf.Logger.Debugf("Permissions for %s is %d", art.Source, perms)
-			}
-
-			b.Conf.Logger.Debugf("Stopping the container %s", container.ID)
-			err = b.docker.StopContainer(container.ID, 0)
-			if err != nil {
-				return err
-			}
-
 			b.Conf.Logger.Noticef("Copying artifacts from %s", container.ID)
-
 			for _, art := range step.Artifacts {
-				err = b.copyToHost(&art, container.ID, permMap)
+				err = b.copyToHost(&art, container.ID)
 				if err != nil {
 					return err
 				}
@@ -595,18 +543,7 @@ func (b *Builder) replaceFromField(step *Step, step_number int) error {
 	return nil
 }
 
-func overwrite(mpath string) (*os.File, error) {
-	f, err := os.OpenFile(mpath, os.O_RDWR|os.O_TRUNC, 0777)
-	if err != nil {
-		f, err = os.Create(mpath)
-		if err != nil {
-			return f, err
-		}
-	}
-	return f, nil
-}
-
-func (b *Builder) copyToHost(a *Artifact, container string, perms map[string]int) error {
+func (b *Builder) copyToHost(a *Artifact, container string) error {
 	// create the artifacts distination folder if not there
 	destPath := path.Join(b.Conf.Workdir, a.Dest)
 	err := os.MkdirAll(destPath, 0777)
@@ -658,15 +595,7 @@ func (b *Builder) copyToHost(a *Artifact, container string, perms map[string]int
 		default:
 			return errors.New("Invalid header type")
 		}
-
-		b.Conf.Logger.Debugf("Setting file permissions for %s to %d", destFile, perms[a.Source])
-		err = os.Chmod(destFile, os.FileMode(perms[a.Source])|0700)
-		if err != nil {
-			return err
-		}
-
 	}
-
 	return nil
 }
 
