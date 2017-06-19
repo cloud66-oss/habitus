@@ -69,6 +69,8 @@ func main() {
 	flag.BoolVar(&config.KeepSteps, "keep-all", false, "Overrides the keep flag for all steps. Used for debugging")
 	flag.BoolVar(&config.KeepArtifacts, "keep-artifacts", false, "Keep the temporary artifacts created on the host during build. Used for debugging")
 	flag.BoolVar(&config.UseTLS, "use-tls", false, "Uses TLS connection with Docker daemon")
+	flag.BoolVar(&config.UseStatForPermissions, "use-stat", true, "Uses the stat command inside your container to get the arfifact permissions")
+
 	flag.BoolVar(&config.NoSquash, "no-cleanup", false, "Skip cleanup commands for this run. Used for debugging")
 	flag.BoolVar(&config.FroceRmImages, "force-rmi", false, "Force remove of unwanted images")
 	flag.BoolVar(&config.NoPruneRmImages, "noprune-rmi", false, "No pruning of unwanted images")

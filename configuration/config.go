@@ -33,6 +33,7 @@ type Config struct {
 	NoSquash                bool
 	NoPruneRmImages         bool
 	UseTLS                  bool
+	UseStatForPermissions	bool
 	FroceRmImages           bool
 	ApiPort                 int
 	ApiBinding              string
