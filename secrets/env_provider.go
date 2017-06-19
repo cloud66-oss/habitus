@@ -9,7 +9,7 @@ type EnvProvider struct {
 }
 
 func (env_provider *EnvProvider) GetSecret(name string) (string, error) {
-	key := env_provider.registry[name]
+	key := "HABITUS_" + env_provider.registry[name]
 	dat := os.Getenv(key)
 	return string(dat), nil
 }
