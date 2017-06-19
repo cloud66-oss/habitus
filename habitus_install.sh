@@ -14,6 +14,8 @@ e_error() { printf "${bold}${red}%s${reset}\n" "$@"
 }
 e_warning() { printf "${tan}%s${reset}\n" "$@"
 }
+e_info() { printf "${bold}%s${reset}\n" "$@"
+}
 
 #Check target
 type_exists() {
@@ -37,16 +39,16 @@ is_64() {
 
 do_install() {
   if is_os "darwin"; then
-    printf "Downloading OSX Habitus...\n"
+    e_info "Downloading Habitus for macOS..."
     `rm -f /tmp/habitus &> /dev/null`
     `curl -L -o /tmp/habitus -s https://github.com/cloud66/habitus/releases/download/1.0.0/habitus_macosx`
   elif is_os "linux"; then
     if [[ is_64 ]]; then
-	  printf "Downloading Linux 64bits Habitus...\n"
+	  e_info "Downloading Habitus for Linux x64..."
 	  `rm -f /tmp/c66_toolbelt.tar.gz &> /dev/null`
 	  `curl -L -o /tmp/habitus -s https://github.com/cloud66/habitus/releases/download/1.0.0/habitus_linux`
     else
-	  printf "Downloading Linux 32bits Habitus...\n"
+	  e_info "Downloading Habitus for Linux x32..."
 	  `rm -f /tmp/c66_toolbelt.tar.gz &> /dev/null`
 	  `curl -L -o /tmp/habitus -s https://github.com/cloud66/habitus/releases/download/1.0.0/habitus_linux`
     fi
@@ -70,7 +72,7 @@ do_install() {
   `unlink /usr/local/bin/habitus &> /dev/null`
   `ln -nfs $USER_HOME/.habitus/habitus /usr/local/bin/habitus &> /dev/null`
   if [ $? -eq 0 ] ; then
-  	e_success "The 'habitus' command should now be available"
+  	e_info "The 'habitus' command should now be available"
   	e_success "YAY! Successfully installed Habitus!"
   else
 	e_warning "Warning: Unable to create a symlink for Habitus"
@@ -78,7 +80,7 @@ do_install() {
   fi
 }
 
-printf "Habitus installation script\n"
+e_success "Installing Habitus V1.0.0"
 # check if running as sudoer
 if [ $UID -eq 0 ] ; then
 	USER_HOME="/home/"$SUDO_USER
