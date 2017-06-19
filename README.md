@@ -57,7 +57,7 @@ http://www.habitus.io/
 ### Quick Start: 
 ________________________________________________________________________________________________________
 
-First step is to [download](https://github.com/cloud66/habitus/releases?utm_source=Githubdownload&utm_medium=GHDpage&utm_campaign=habitus) Habitus. Download the latest version and choice the right platform. Habitus can run on Linux, Windows and Mac. Copy the the downloaded Habitus application into `/usr/local/bin/habitus` and check if it has the executable flags, if not run `chmod a+x /usr/local/bin/habitus`
+First step is to [download](https://github.com/cloud66/habitus/releases?utm_source=Githubdownload&utm_medium=GHDpage&utm_campaign=habitus) Habitus. If you want to install on macOS or Linux you can run: `curl -sSL https://raw.githubusercontent.com/cloud66/habitus/master/habitus_install.sh | bash` to install Habitus from the commandline. Download the latest version and choice the right platform. Habitus can run on Linux, Windows and Mac. Copy the the downloaded Habitus application into `/usr/local/bin/habitus` and check if it has the executable flags, if not run `chmod a+x /usr/local/bin/habitus`
 
 
 Build files can be made up of multiple steps. Each step is independent of the other ones and downstream steps can use upstream ones as source (in `FROM` command). When habitus is installed, create a simple **build.yml** with just one build step and run Habitus. 
