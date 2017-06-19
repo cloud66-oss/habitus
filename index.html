@@ -192,7 +192,7 @@ secrets:
     value: SECRET_KEY
   </code>
 </pre>
-      <p>Check <a href="https://github.com/cloud66/habitus/tree/master/examples/security_env">here</a> for an example using environment variable secrets.</p>
+      <p>Check <a href="https://github.com/cloud66/habitus/tree/master/examples/security_env">here</a> for an example using environment variable secrets. NOTE: The value of the exposed_secret_env in this example is mapped to the host machine as HABITUS_SECRET_KEY instead of SECRET_KEY due to security reasons.</p>
 
 <h5>Habitus IP address</h5>
 <p>Finding the correct IP address to server Habitus API (and secrets) on can be tricky. You don't want to bind it to <code>0.0.0.0</code> since it will make Habitus and your secrets available to your entire local network (and possibly the internet if you're running a tunnel) during the build time.</p>
@@ -308,8 +308,9 @@ artifacts:
 <li><code>noprune-rmi</code>: Doesn't prune unwanted images after the build</li>
 <li><code>port</code>: Port to server Habitus API on. Default is <code>8080</code></li>
 <li><code>rm</code>: Remove intermediate built images.</li>
-<li><code>sec-providers</code>: Comma separated list of secret provider types available during the build. Default is <code>file</code></li>
+<li><code>sec-providers</code>: Comma separated list of secret provider types available during the build. Default is <code>file,env</code></li>
 <li><code>secrets</code>: Enable or disable support for secrets during build. Default is <code>false</code></li>
+  <li><code>use-stat=</code>: Enable or disable coping artifacts permissions using <code>stat</code> (need to be installed on the artifact image). Default is <code>true</code></li>
 <li><code>suppress</code>: Suppress docker build output.</li>
 <li><code>tls</code>: Use TLS to connect to the Docker daemon (default is true)</li>
 <li><code>uid</code>: A unique ID used for a build session to allow multi-tenancy of Habitus</li>
