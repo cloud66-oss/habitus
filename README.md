@@ -57,8 +57,11 @@ http://www.habitus.io/
 ### Quick Start: 
 ________________________________________________________________________________________________________
 
-First step is to [download](https://github.com/cloud66/habitus/releases?utm_source=Githubdownload&utm_medium=GHDpage&utm_campaign=habitus) Habitus. If you want to install on macOS or Linux you can run: `curl -sSL https://raw.githubusercontent.com/cloud66/habitus/master/habitus_install.sh | bash` to install Habitus from the commandline. Download the latest version and choice the right platform. Habitus can run on Linux, Windows and Mac. Copy the the downloaded Habitus application into `/usr/local/bin/habitus` and check if it has the executable flags, if not run `chmod a+x /usr/local/bin/habitus`
+Just run the install script on macOS or Linux!
 
+`curl -sSL https://raw.githubusercontent.com/cloud66/habitus/master/habitus_install.sh | bash`
+
+Or [download](https://github.com/cloud66/habitus/releases?utm_source=Githubdownload&utm_medium=GHDpage&utm_campaign=habitus) Habitus straight from this repo. Habitus can run on Linux, Windows and macOS. Copy the Habitus application into `/usr/local/bin/habitus` and check if it has the executable flags, if not run `chmod a+x /usr/local/bin/habitus`
 
 Build files can be made up of multiple steps. Each step is independent of the other ones and downstream steps can use upstream ones as source (in `FROM` command). When habitus is installed, create a simple **build.yml** with just one build step and run Habitus. 
 
@@ -86,7 +89,7 @@ If you wish to work on the Habitus project itself. We provided a docker-compose.
 
 After the build, you can use Habitus to build itself using the following command in the running container:
 
-    # ./habitus --use-tls=false --host=unix://var/run/docker.sock --secrets=false --keep-artifacts=true 
+    # ./habitus
 
 You can run tests by typing 
 
@@ -95,11 +98,6 @@ You can run tests by typing
     # go test    
 
 And you are ready to start your contribution to Habitus. 
-
-#### Difference with Windows or OS or Linux
-______________________________________________________________________________________________________
-- On a Linux machine where Docker can run natively you can bind Habitus to 127.0.0.1.
-- On a Mac (OSX) Docker runs inside of a VM (VirtualBox in most cases through Boot2Docker). This means you need to find the VM address of your Mac and use that to bind Habitus to. By default, Boot2Docker (and Docker Machine) use 192.168.99.1 which is what Habitus uses by default.
 
 ### CHANGELOG
 
