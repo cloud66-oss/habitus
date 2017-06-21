@@ -14,7 +14,7 @@
 example `no_cache` feature: https://github.com/cloud66/habitus/tree/master/examples/no_cache
 example `after_build_command` feature: https://github.com/cloud66/habitus/tree/master/examples/after_build_command
 
-NOTE: If you want to use the `no_cache` feature you must enable this for security reasons on the command line:
+NOTE: If you want to use the `after_build_command` feature you must enable this for security reasons on the command line:
 
 `habitus --after-build-command=true ...`\
 
