@@ -43,6 +43,9 @@ type Config struct {
 	DockerMemory            string
 	DockerCPUSetCPUs        string
 	DockerCPUShares         int
+	UseAuthenticatedSecretServer bool
+	AuthenticatedSecretServerPassword string
+	AuthenticatedSecretServerUser string
 }
 
 func (i *TupleArray) String() string {

@@ -22,6 +22,19 @@ func (s *Server) StartServer(version string) error {
 	VERSION = version
 	secret_api := rest.NewApi()
 
+	if s.Builder.Conf.UseAuthenticatedSecretServer {
+		secret_api.Use(&rest.AuthBasicMiddleware{
+			Realm: "Habitus secret service",
+			Authenticator: func(userId string, password string) bool {
+				if userId == s.Builder.Conf.AuthenticatedSecretServerUser && password == s.Builder.Conf.AuthenticatedSecretServerPassword {
+					return true
+				}
+				return false
+			},
+		})
+	}
+
+
 	router, err := rest.MakeRouter(
 		// system
 		&rest.Route{"GET", "/v1/ping", s.ping},

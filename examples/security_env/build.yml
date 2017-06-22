@@ -4,7 +4,7 @@ build:
     builder:
       name: builder
       dockerfile: Dockerfile
-      no_cache: true
+      no_cache: false
       secrets:
         my_env_secret:
           type: env

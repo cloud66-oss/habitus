@@ -1,3 +1,7 @@
 Run this example using secrets
 
-`habitus --build host=[ip of habitus endpoint] --host=unix:///var/run/docker.sock --binding=0.0.0.0 --secrets=true`
+`habitus -f examples/security_env/build.yml -d examples/security_env --secrets=true --authentication-secret-server=true --binding=[your ip]  --build habitus_host=[your ip]  --build habitus_port=8080 --build habitus_password=admin  --build habitus_user=habitus`
+
+Make sure you set the EnvVar
+
+`export HABITUS_HOME=my_secret`

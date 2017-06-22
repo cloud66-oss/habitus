@@ -85,6 +85,10 @@ func main() {
 	flag.StringVar(&config.DockerCPUSetCPUs, "docker-cpuset-cpus", "", "CPU binding limits to apply to Docker build operations. More: https://docs.docker.com/engine/reference/commandline/build")
 	flag.IntVar(&config.DockerCPUShares, "docker-cpu-shares", 1024, "CPU share weighting to apply to Docker build operations. More: https://docs.docker.com/engine/reference/commandline/build")
 
+	flag.BoolVar(&config.UseAuthenticatedSecretServer, "authentication-secret-server", false, "Enable basic authentication for secret server")
+	flag.StringVar(&config.AuthenticatedSecretServerPassword, "password-secret-server", "admin", "The password for basic authentication.")
+	flag.StringVar(&config.AuthenticatedSecretServerUser, "user-secret-server", "habitus", "The user for basic authentication.")
+
 	config.Logger = *log
 	flag.Parse()
 
