@@ -1,0 +1,1 @@
+./habitus -f examples/security_env/build.yml -d examples/security_env --secrets=true --authentication-secret-server=false --binding=192.168.1.58  --build habitus_host=192.168.1.58  --build habitus_port=8080 --build habitus_password=admin  --build habitus_user=habitus
