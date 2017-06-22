@@ -104,9 +104,9 @@ func main() {
 
 	if flagShowVersion || (len(args) > 0 && args[0] == "version") {
 		if BUILD_DATE == "" {
-			fmt.Printf("Habitus - v%s (c) 2016 Cloud 66 Inc.\n", VERSION)
+			fmt.Printf("Habitus - v%s (c) 2017 Cloud 66 Inc.\n", VERSION)
 		} else {
-			fmt.Printf("Habitus - v%s (%s) (c) 2016 Cloud 66 Inc.\n", VERSION, BUILD_DATE)
+			fmt.Printf("Habitus - v%s (%s) (c) 2017 Cloud 66 Inc.\n", VERSION, BUILD_DATE)
 		}
 		return
 	}
