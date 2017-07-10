@@ -10,8 +10,8 @@ import (
 	"github.com/cloud66/habitus/configuration"
 	"github.com/cloud66/habitus/api"
 	"github.com/op/go-logging"
-
-	"github.com/bugsnag/bugsnag-go"
+	"github.com/getsentry/raven-go"
+	"runtime"
 )
 
 var prettyFormat = logging.MustStringFormatter(
@@ -31,17 +31,15 @@ var (
 )
 
 func init() {
-	bugsnag.Configure(bugsnag.Configuration{
-		APIKey:     "ba9d7ae6b333e27971d86e5bf7abe996",
-		AppVersion: VERSION,
-	})
+	//sentry DSN setup
+	raven.SetDSN("https://c5b047b41b3f4de38fc93cb3df75fd43:c94164f03aba4ded84de1fa5894e6544@sentry.io/187936")
 }
 
 const DEFAULT_DOCKER_HOST = "unix:///var/run/docker.sock"
 
 func main() {
 	args := os.Args[1:]
-	defer bugsnag.AutoNotify()
+	defer recoverPanic()
 
 	var log = logging.MustGetLogger("habitus")
 	logging.SetFormatter(plainFormat)
@@ -156,5 +154,20 @@ func main() {
 	err = b.StartBuild()
 	if err != nil {
 		log.Errorf("Error during build %s", err.Error())
+	}
+}
+
+
+func recoverPanic() {
+	if VERSION != "dev" {
+		raven.CapturePanicAndWait(func() {
+			if rec := recover(); rec != nil {
+				panic(rec)
+			}
+		}, map[string]string{
+			"Version":      VERSION,
+			"Platform":     runtime.GOOS,
+			"Architecture": runtime.GOARCH,
+			"goversion":    runtime.Version()})
 	}
 }
