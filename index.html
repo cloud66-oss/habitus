@@ -288,7 +288,7 @@ artifacts:
 <li><code>env</code>: Environment variables used in the build process. If not specified Habitus inherits all environment variables of the parent process.</li>
 <li><code>force-rm</code>: Forcefully remove intermediate images.</li>
 <li><code>force-rmi</code>: Forces removal of unwanted images after the build</li>
-<li><code>host</code>: Address for Docker daemon to run the build. Defaults to the value of <code>$DOCKER_HOST</code>.</li>
+<li><code>host</code>: Address for Docker daemon to run the build. Defaults to the value of <code>$DOCKER_HOST</code>. For Docker on OSX, use <code>unix:///var/run/docker.sock</code></code></li>
 <li><code>keep-all</code>: Overrides the keep flag for all steps so you can inspect and debug the created images of each step without changing the build file.</li>
 <li><code>level</code>: Logging level. Acceptable values: <code>debug</code>, <code>info</code>, <code>notice</code>, <code>warning</code>, <code>error</code> and critical. Defaults to <code>debug</code></li>
 <li><code>no-cache</code>: Don't use docker build caching.</li>
