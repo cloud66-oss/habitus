@@ -37,12 +37,15 @@ type Secret struct {
 	Value string
 }
 
+type BuildArgs map[string]string
+
 // Step Holds a single step in the build process
 // Public structs. They are used to store the build for the builders
 type Step struct {
 	Name       string
 	Label      string
 	Dockerfile string
+	Args       BuildArgs
 	Artifacts  []Artifact
 	Manifest   *Manifest
 	Cleanup    *Cleanup
@@ -71,10 +74,13 @@ type secret struct {
 	Value string `yaml:"value"`
 }
 
+type buildArgs map[string]string
+
 // Private structs. They are used to load from yaml
 type step struct {
 	Name       string            `yaml:"name"`
 	Dockerfile string            `yaml:"dockerfile"`
+	Args       buildArgs         `yaml:"args"`
 	Artifacts  []string          `yaml:"artifacts"`
 	Cleanup    *cleanup          `yaml:"cleanup"`
 	DependsOn  []string          `yaml:"depends_on"`
@@ -142,6 +148,7 @@ func (n *namespace) convertToBuild(version string) (*Manifest, error) {
 		convertedStep.Dockerfile = s.Dockerfile
 		convertedStep.Name = s.Name
 		convertedStep.Label = name
+		convertedStep.Args = BuildArgs(s.Args)
 		convertedStep.Artifacts = []Artifact{}
 		convertedStep.Command = s.Command
 		convertedStep.AfterBuildCommand = s.AfterBuildCommand

@@ -231,6 +231,9 @@ func (b *Builder) BuildStep(step *Step, step_number int) error {
 	for _, s := range b.Conf.BuildArgs {
 		buildArgs = append(buildArgs, docker.BuildArg{Name: s.Key, Value: s.Value})
 	}
+	for k, v := range step.Args {
+		buildArgs = append(buildArgs, docker.BuildArg{Name: k, Value: v})
+	}
 	// call Docker to build the Dockerfile (from the parsed file)
 
 	b.Conf.Logger.Infof("Step %d - Building the %s image from %s", step_number+1, b.uniqueStepName(step), b.uniqueDockerfile(step))
