@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	validTypes = []string{"file","env"}
+	validTypes = []string{"file", "env"}
 )
 
 // Artifact holds a parsed source for a build artifact
@@ -42,18 +42,19 @@ type BuildArgs map[string]string
 // Step Holds a single step in the build process
 // Public structs. They are used to store the build for the builders
 type Step struct {
-	Name       string
-	Label      string
-	Dockerfile string
-	Args       BuildArgs
-	Artifacts  []Artifact
-	Manifest   *Manifest
-	Cleanup    *Cleanup
-	DependsOn  []*Step
-	Command    string
+	Name              string
+	Label             string
+	Dockerfile        string
+	Args              BuildArgs
+	Artifacts         []Artifact
+	Manifest          *Manifest
+	Target            string
+	Cleanup           *Cleanup
+	DependsOn         []*Step
+	Command           string
 	AfterBuildCommand string
-	NoCache		bool
-	Secrets    []Secret
+	NoCache           bool
+	Secrets           []Secret
 }
 
 // Manifest Holds the whole build process
@@ -78,16 +79,17 @@ type buildArgs map[string]string
 
 // Private structs. They are used to load from yaml
 type step struct {
-	Name       string            `yaml:"name"`
-	Dockerfile string            `yaml:"dockerfile"`
-	Args       buildArgs         `yaml:"args"`
-	Artifacts  []string          `yaml:"artifacts"`
-	Cleanup    *cleanup          `yaml:"cleanup"`
-	DependsOn  []string          `yaml:"depends_on"`
-	Command    string            `yaml:"command"`
-	AfterBuildCommand string 	 `yaml:"after_build_command"`
-	NoCache 	bool			 `yaml:"no_cache"`
-	Secrets    map[string]secret `yaml:"secrets"`
+	Name              string            `yaml:"name"`
+	Dockerfile        string            `yaml:"dockerfile"`
+	Args              buildArgs         `yaml:"args"`
+	Artifacts         []string          `yaml:"artifacts"`
+	Target            string            `yaml:"target"`
+	Cleanup           *cleanup          `yaml:"cleanup"`
+	DependsOn         []string          `yaml:"depends_on"`
+	Command           string            `yaml:"command"`
+	AfterBuildCommand string            `yaml:"after_build_command"`
+	NoCache           bool              `yaml:"no_cache"`
+	Secrets           map[string]secret `yaml:"secrets"`
 }
 
 // This is loaded from the build.yml file
@@ -137,7 +139,6 @@ func (n *namespace) convertToBuild(version string) (*Manifest, error) {
 	manifest.SecretProviders["file"] = &secrets.FileProvider{}
 	manifest.SecretProviders["env"] = &secrets.EnvProvider{}
 
-
 	manifest.IsPrivileged = false
 	manifest.Steps = []Step{}
 
@@ -150,6 +151,7 @@ func (n *namespace) convertToBuild(version string) (*Manifest, error) {
 		convertedStep.Label = name
 		convertedStep.Args = BuildArgs(s.Args)
 		convertedStep.Artifacts = []Artifact{}
+		convertedStep.Target = s.Target
 		convertedStep.Command = s.Command
 		convertedStep.AfterBuildCommand = s.AfterBuildCommand
 		convertedStep.NoCache = s.NoCache

@@ -17,13 +17,14 @@ import (
 	"strings"
 	"sync"
 
+	"os/exec"
+
 	"github.com/cloud66/habitus/configuration"
 	"github.com/cloud66/habitus/squash"
 	"github.com/dchest/uniuri"
 	"github.com/dustin/go-humanize"
 	"github.com/fsouza/go-dockerclient"
 	"github.com/satori/go.uuid"
-	"os/exec"
 )
 
 // Builder is a simple Dockerfile builder
@@ -222,8 +223,19 @@ func (b *Builder) uniqueStepName(step *Step) string {
 func (b *Builder) BuildStep(step *Step, step_number int) error {
 	b.Conf.Logger.Noticef("Step %d - Building %s from context '%s'", step_number+1, step.Name, b.Conf.Workdir)
 	// fix the Dockerfile
-	err := b.replaceFromField(step, step_number)
+	dockerfile, err := b.replaceFromField(step, step_number)
 	if err != nil {
+		return err
+	}
+
+	if step.Target != "" {
+		dockerfile, err = readDockerfileToTarget(dockerfile, step.Target)
+		if err != nil {
+			return err
+		}
+	}
+
+	if err := b.writeDockerfile(dockerfile, b.uniqueDockerfile(step), step_number); err != nil {
 		return err
 	}
 
@@ -564,30 +576,30 @@ func (b *Builder) BuildStep(step *Step, step_number int) error {
 
 // this replaces the FROM field in the Dockerfile to one with the previous step's unique name
 // it stores the parsed result Dockefile in uniqueSessionName file
-func (b *Builder) replaceFromField(step *Step, step_number int) error {
+func (b *Builder) replaceFromField(step *Step, step_number int) (string, error) {
 	b.Conf.Logger.Noticef("Step %d - Parsing and converting '%s'", step_number+1, step.Dockerfile)
 
 	rwc, err := os.Open(path.Join(b.Conf.Workdir, step.Dockerfile))
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer rwc.Close()
 
 	buffer, err := ioutil.ReadAll(rwc)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	fromTag := regexp.MustCompile("FROM (.*)")
 	if !fromTag.Match(buffer) {
-		return errors.New("invalid Dockerfile. No valid FROM found")
+		return "", errors.New("invalid Dockerfile. No valid FROM found")
 	}
 
 	imageNameAsBytes := fromTag.FindAllSubmatch(buffer, -1)
 	imageName := string(imageNameAsBytes[0][1])
 	found, err := step.Manifest.FindStepByName(imageName)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if found != nil {
@@ -595,12 +607,13 @@ func (b *Builder) replaceFromField(step *Step, step_number int) error {
 		buffer = fromTag.ReplaceAll(buffer, []byte("FROM "+uniqueStepName))
 	}
 
-	b.Conf.Logger.Debugf("Step %d - Writing the new Dockerfile into '%s'", step_number+1, b.uniqueDockerfile(step))
-	err = ioutil.WriteFile(b.uniqueDockerfile(step), buffer, 0644)
-	if err != nil {
-		return err
-	}
-	return nil
+	return string(buffer), nil
+}
+
+func (b *Builder) writeDockerfile(dockerfile string, path string, stepNumber int) error {
+	b.Conf.Logger.Debugf("Step %d - Writing the new Dockerfile into '%s'", stepNumber+1, path)
+	err := ioutil.WriteFile(path, []byte(dockerfile), 0644)
+	return err
 }
 
 func overwrite(mpath string) (*os.File, error) {
