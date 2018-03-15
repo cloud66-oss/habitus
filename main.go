@@ -6,12 +6,13 @@ import (
 	"os"
 	"path/filepath"
 
+	"runtime"
+
+	"github.com/cloud66/habitus/api"
 	"github.com/cloud66/habitus/build"
 	"github.com/cloud66/habitus/configuration"
-	"github.com/cloud66/habitus/api"
-	"github.com/op/go-logging"
 	"github.com/getsentry/raven-go"
-	"runtime"
+	"github.com/op/go-logging"
 )
 
 var prettyFormat = logging.MustStringFormatter(
@@ -54,16 +55,17 @@ func main() {
 	flag.StringVar(&config.UniqueID, "uid", "", "Unique ID for the build. Used only for multi-tenanted build environments")
 	flag.StringVar(&flagLevel, "level", "debug", "Log level: debug, info, notice, warning, error and critical")
 	flag.BoolVar(&flagPrettyLog, "pretty", true, "Display logs with color and formatting")
-	
+
 	dockerhost, ok := os.LookupEnv("DOCKER_HOST")
 	if !ok {
 		dockerhost = DEFAULT_DOCKER_HOST
-	} 
-	
+	}
+
 	flag.StringVar(&config.DockerHost, "host", dockerhost, "Docker host link. Uses DOCKER_HOST if missing.")
 	flag.StringVar(&config.DockerCert, "certs", os.Getenv("DOCKER_CERT_PATH"), "Docker cert folder. Uses DOCKER_CERT_PATH if missing")
 	flag.Var(&config.EnvVars, "env", "Environment variables to be used in the build.yml. Uses parent process environment variables if empty")
 	flag.Var(&config.BuildArgs, "build", "Build arguments to be used during each Dockerfile build step.")
+	flag.StringVar(&config.Network, "network", "", "Set the networking mode for the RUN instructions during build. See `networkmode` in https://docs.docker.com/engine/api/v1.25/#operation/ImageBuild for available values. If omitted, the \"default\" bridge network is used, which is the same behavior as `docker build`.")
 	flag.BoolVar(&config.KeepSteps, "keep-all", false, "Overrides the keep flag for all steps. Used for debugging")
 	flag.BoolVar(&config.KeepArtifacts, "keep-artifacts", false, "Keep the temporary artifacts created on the host during build. Used for debugging")
 	flag.BoolVar(&config.UseTLS, "use-tls", os.Getenv("DOCKER_TLS_VERIFY") == "1", "Establish TLS connection with Docker daemon. Uses DOCKER_TLS_VERIFY if missing")
@@ -156,7 +158,6 @@ func main() {
 		log.Errorf("Error during build %s", err.Error())
 	}
 }
-
 
 func recoverPanic() {
 	if VERSION != "dev" {
