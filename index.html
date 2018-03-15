@@ -247,6 +247,16 @@ cleanup:
 
 <p>Please note if you are using step A's result in step B's <code>FROM</code> statement, you need to make sure A is listed under <code>depends_on</code> attribute of B. Otherwise both A and B will be built in parallel.</p>
 
+<h4>Build stage targeting</h4>
+
+<p>This feature allows you to enhance docker multi-stage builds with Habitus.<p>
+<p>Habitus allows reusing the same Dockerfile from different steps while targeting each step to a specific build stage. This means a step can use the image built by the previous step as the source in its Dockerfile <code>FROM</code> command, similarly to we have discussed in `
+encing` above, but with different pros and cons.</p>
+<p>One of pros is faster builds due to faster assets transfer between steps, because now assets transfer happens directly between build contexts, rather than routed via the node habitus is running. An another one is that Docker users used to multi-stage builds can easily adapt to Habitus for its advanced features, without rewriting their multi-stage-ready Dockerfiles. For more inforation, see <a href="https://github.com/cloud66/habitus/pull/90">this issue</a>.</p>
+
+<p>To use this feature, specify [a `target` per step in your `build.yml`](https://github.com/mumoshu/habitus/blob/42f4ec5997f771863afd5120f36772d1a92f9c9d/examples/multistage/build.yml).</p>
+<p>The specified [`target` should exist within your `Dockerfile`](https://github.com/mumoshu/habitus/blob/42f4ec5997f771863afd5120f36772d1a92f9c9d/examples/multistage/Dockerfile) referenced in the step. In other words, there must be a `FROM <your base image> AS <target = build stage name>` in the `Dockerfile`.</p>
+
 <h4>Step dependencies</h4>
 
 <p>Steps can depend on each other. This can be specified by the <code>depends_on</code> attribute.</p>
