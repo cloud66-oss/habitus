@@ -134,10 +134,8 @@ func LoadBuildFromFile(config *configuration.Config) (*Manifest, error) {
 
 func (n *namespace) convertToBuild(version string) (*Manifest, error) {
 	manifest := Manifest{
-		SecretProviders: make(map[string]secrets.SecretProvider),
+		SecretProviders: secrets.GetProviders(),
 	}
-	manifest.SecretProviders["file"] = &secrets.FileProvider{}
-	manifest.SecretProviders["env"] = &secrets.EnvProvider{}
 
 	manifest.IsPrivileged = false
 	manifest.Steps = []Step{}

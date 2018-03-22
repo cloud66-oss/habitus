@@ -14,39 +14,44 @@ type TupleItem struct {
 
 type TupleArray []TupleItem
 
+type Server struct {
+	ApiBinding                        string
+	ApiPort                           int
+	AuthenticatedSecretServerUser     string
+	AuthenticatedSecretServerPassword string
+	Logger                            logging.Logger
+	UseAuthenticatedSecretServer      bool
+}
+
 // Config stores application configurations
 type Config struct {
-	Buildfile                         string
-	Workdir                           string
-	NoCache                           bool
-	SuppressOutput                    bool
-	RmTmpContainers                   bool
-	ForceRmTmpContainer               bool
-	UniqueID                          string
-	Logger                            logging.Logger
-	DockerHost                        string
-	DockerCert                        string
-	EnvVars                           TupleArray
-	BuildArgs                         TupleArray
-	KeepSteps                         bool
-	KeepArtifacts                     bool
-	Network                           string
-	NoSquash                          bool
-	NoPruneRmImages                   bool
-	UseTLS                            bool
-	UseStatForPermissions             bool
-	FroceRmImages                     bool
-	ApiPort                           int
-	ApiBinding                        string
-	SecretService                     bool
-	AllowAfterBuildCommands           bool
-	SecretProviders                   string
-	DockerMemory                      string
-	DockerCPUSetCPUs                  string
-	DockerCPUShares                   int
-	UseAuthenticatedSecretServer      bool
-	AuthenticatedSecretServerPassword string
-	AuthenticatedSecretServerUser     string
+	Server
+	Buildfile               string
+	Workdir                 string
+	NoCache                 bool
+	SuppressOutput          bool
+	RmTmpContainers         bool
+	ForceRmTmpContainer     bool
+	UniqueID                string
+	Logger                  logging.Logger
+	DockerHost              string
+	DockerCert              string
+	EnvVars                 TupleArray
+	BuildArgs               TupleArray
+	KeepSteps               bool
+	KeepArtifacts           bool
+	Network                 string
+	NoSquash                bool
+	NoPruneRmImages         bool
+	UseTLS                  bool
+	UseStatForPermissions   bool
+	FroceRmImages           bool
+	SecretService           bool
+	AllowAfterBuildCommands bool
+	SecretProviders         string
+	DockerMemory            string
+	DockerCPUSetCPUs        string
+	DockerCPUShares         int
 }
 
 func (i *TupleArray) String() string {
