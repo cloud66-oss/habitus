@@ -251,6 +251,7 @@ func (b *Builder) BuildStep(step *Step, step_number int) error {
 	b.Conf.Logger.Infof("Step %d - Building the %s image from %s", step_number+1, b.uniqueStepName(step), b.uniqueDockerfile(step))
 	opts := docker.BuildImageOptions{
 		Name:                b.uniqueStepName(step),
+		NetworkMode:         b.Conf.Network,
 		Dockerfile:          b.uniqueDockerfileName(step),
 		NoCache:             b.Conf.NoCache || step.NoCache,
 		SuppressOutput:      b.Conf.SuppressOutput,
