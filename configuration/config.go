@@ -36,6 +36,7 @@ type Config struct {
 	UseTLS                            bool
 	UseStatForPermissions             bool
 	FroceRmImages                     bool
+	CustomShell                       string
 	ApiPort                           int
 	ApiBinding                        string
 	SecretService                     bool

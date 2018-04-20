@@ -701,7 +701,7 @@ func (b *Builder) createContainer(step *Step) (*docker.Container, error) {
 		AttachStdin:  false,
 		AttachStderr: true,
 		Image:        b.uniqueStepName(step),
-		Cmd:          []string{"/bin/bash"},
+		Cmd:          []string{b.Conf.CustomShell},
 		Tty:          true,
 	}
 

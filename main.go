@@ -74,6 +74,7 @@ func main() {
 	flag.BoolVar(&config.NoSquash, "no-cleanup", false, "Skip cleanup commands for this run. Used for debugging")
 	flag.BoolVar(&config.FroceRmImages, "force-rmi", false, "Force remove of unwanted images")
 	flag.BoolVar(&config.NoPruneRmImages, "noprune-rmi", false, "No pruning of unwanted images")
+	flag.StringVar(&config.CustomShell, "shell", "/bin/bash", "Use custom shell binary to execute commands inside containers")
 	flag.BoolVar(&flagShowHelp, "help", false, "Display the help")
 	flag.BoolVar(&flagShowVersion, "version", false, "Display version information")
 	flag.IntVar(&config.ApiPort, "port", 8080, "Port to server the API")
