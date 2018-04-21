@@ -430,14 +430,21 @@ func (b *Builder) BuildStep(step *Step, step_number int) error {
 			permMap := make(map[string]int)
 			if b.Conf.UseStatForPermissions {
 				for _, art := range step.Artifacts {
+					// Check for Busybox and modify the stat command
+					stat_cmd := []string{"stat", "--format='%a'", art.Source}
+					if b.Conf.UseBusybox {
+						stat_cmd = []string{"stat", "-c", "'%a'", art.Source}
+					}
+
 					execOpts := docker.CreateExecOptions{
 						Container:    container.ID,
 						AttachStdin:  false,
 						AttachStdout: true,
 						AttachStderr: true,
 						Tty:          false,
-						Cmd:          []string{"stat", "--format='%a'", art.Source},
+						Cmd:          stat_cmd,
 					}
+					b.Conf.Logger.Debugf("Executing inside %s: %s", container.ID, execOpts.Cmd)
 					execObj, err := b.docker.CreateExec(execOpts)
 					if err != nil {
 						return err
@@ -503,6 +510,7 @@ func (b *Builder) BuildStep(step *Step, step_number int) error {
 				Tty:          true,
 				Cmd:          strings.Split(step.Command, " "),
 			}
+			b.Conf.Logger.Debugf("Executing inside %s: %s", container.ID, execOpts.Cmd)
 			execObj, err := b.docker.CreateExec(execOpts)
 			if err != nil {
 				return err
@@ -696,12 +704,17 @@ func (b *Builder) copyToHost(a *Artifact, container string, perms map[string]int
 }
 
 func (b *Builder) createContainer(step *Step) (*docker.Container, error) {
+	// check to see if we should run under a Busybox environment
+	shell := []string{"/bin/bash"}
+	if b.Conf.UseBusybox {
+		shell = []string{"/bin/sh"}
+	}
 	config := docker.Config{
 		AttachStdout: true,
 		AttachStdin:  false,
 		AttachStderr: true,
 		Image:        b.uniqueStepName(step),
-		Cmd:          []string{b.Conf.CustomShell},
+		Cmd:          shell,
 		Tty:          true,
 	}
 
