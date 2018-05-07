@@ -14,6 +14,14 @@ type TupleItem struct {
 
 type TupleArray []TupleItem
 
+type OsIdentifier int
+const (
+	debian      OsIdentifier = iota + 1
+	redhat
+	busybox
+	alpine
+)
+
 // Config stores application configurations
 type Config struct {
 	Buildfile                         string
@@ -36,7 +44,7 @@ type Config struct {
 	UseTLS                            bool
 	UseStatForPermissions             bool
 	FroceRmImages                     bool
-	UseBusybox                        bool
+	OsType                            string
 	ApiPort                           int
 	ApiBinding                        string
 	SecretService                     bool
@@ -79,4 +87,15 @@ func (i *TupleArray) Find(key string) string {
 // CreateConfig creates a new configuration object
 func CreateConfig() Config {
 	return Config{}
+}
+
+func ValidateOsType(text string) bool {
+	osTypes := []string{"debian", "redhat", "busybox", "alpine"}
+
+	for _, os := range(osTypes) {
+		if text == os {
+			return true
+		}
+	}
+	return false
 }
