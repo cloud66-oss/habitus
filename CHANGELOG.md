@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Not Released
+
+- Fixing the test suite by adding the `github.com/sirupsen/logrus`
+go dependency in the `Dockerfile.tester` (transitive dependency).
+
 ## V1.0.0
 
 - containers are coping artifacts with the required `stat` inside a container.  if you want to disable this, use the `--use-stat=false` command parameter.

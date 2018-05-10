@@ -5,6 +5,7 @@ MAINTAINER Daniël van Gils
 #get all the go testing stuff
 RUN go get github.com/onsi/ginkgo/ginkgo
 RUN go get github.com/onsi/gomega
+RUN go get github.com/sirupsen/logrus
 
 #copy the source files
 RUN mkdir -p /usr/local/go/src/github.com/cloud66/habitus
