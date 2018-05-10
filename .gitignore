@@ -34,3 +34,6 @@ habitus_linux_386
 habitus_linux_amd64
 habitus_linux_arm
 launch.json
+
+# Habitus-Generated Dockerfiles
+*.generated
