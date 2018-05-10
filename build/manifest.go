@@ -45,6 +45,7 @@ type Step struct {
 	Name              string
 	Label             string
 	Dockerfile        string
+  Context           string
 	Args              BuildArgs
 	Artifacts         []Artifact
 	Manifest          *Manifest
@@ -81,6 +82,7 @@ type buildArgs map[string]string
 type step struct {
 	Name              string            `yaml:"name"`
 	Dockerfile        string            `yaml:"dockerfile"`
+  Context           string            `yaml:"context"`
 	Args              buildArgs         `yaml:"args"`
 	Artifacts         []string          `yaml:"artifacts"`
 	Target            string            `yaml:"target"`
@@ -147,6 +149,7 @@ func (n *namespace) convertToBuild(version string) (*Manifest, error) {
 
 		convertedStep.Manifest = &manifest
 		convertedStep.Dockerfile = s.Dockerfile
+    convertedStep.Context = s.Context
 		convertedStep.Name = s.Name
 		convertedStep.Label = name
 		convertedStep.Args = BuildArgs(s.Args)

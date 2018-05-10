@@ -4,4 +4,5 @@ build:
   steps:
     step1:
       name: step1
-      dockerfile: examples/context/sub/Dockerfile
+      context: sub
+      dockerfile: Dockerfile
