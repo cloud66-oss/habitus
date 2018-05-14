@@ -83,7 +83,8 @@ build:
         - builder
     uploader:
       name: uploader
-      dockerfile: Dockerfile.uploader
+      context: ./uploader
+      dockerfile: Dockerfile
       depends_on:
         - ironmountain
       command: s3cmd --access_key=_env(ACCESS_KEY) --secret_key=_env(SECRET_KEY) put /app/iron-mountain s3://uploads.aws.com
@@ -98,6 +99,7 @@ build:
 <ul>
 <li><code>name:</code> Name of the generated image</li>
 <li><code>dockerfile:</code> Dockerfile used to build the step</li>
+<li><code>context:</code> (not mandatory) Context directory where the Dockerfile is stored (cf. <a target="_blank noreferer" href="https://docs.docker.com/engine/reference/commandline/build/#extended-description">Docker "build" Reference Documentation </a>)</li>
 <li><code>artifacts:</code> List of all files to be copied out of the image once it's built. See below</li>
 <li><code>secrets:</code> List of all secrets available to the build process. See below</li>
 <li><code>cleanup:</code> List of all cleanup steps to run on the image once the step is finished. See below</li>
