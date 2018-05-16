@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## Not Released
+
+- Adding the keyword `context` for a step to allow specifying a custom
+context directory. Adapted the `examples/context` example.
+- Fixing the test suite by adding the `github.com/sirupsen/logrus`
+go dependency in the `Dockerfile.tester` (transitive dependency).
+
 ## V1.0.0
 
 - containers are coping artifacts with the required `stat` inside a container.  if you want to disable this, use the `--use-stat=false` command parameter.
@@ -19,9 +26,3 @@ NOTE: If you want to use the `after_build_command` feature you must enable this 
 `habitus --after-build-command=true ...`\
 
 Download [V1.0.0-pre.1](https://github.com/cloud66/habitus/releases/tag/1.0.0-pre.1)
-
- 
-
-
-
-

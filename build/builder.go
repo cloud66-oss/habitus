@@ -219,9 +219,18 @@ func (b *Builder) uniqueStepName(step *Step) string {
 	return strings.ToLower(newName)
 }
 
+// The build context is defaulted to the habitus' workdir
+// unless the directive "context" is found for this step
+func (b *Builder) getBuildContext(step *Step) string {
+	if step.Context == "" {
+		return b.Conf.Workdir
+	}
+	return filepath.Join(b.Conf.Workdir, step.Context)
+}
+
 // BuildStep builds a single step
 func (b *Builder) BuildStep(step *Step, step_number int) error {
-	b.Conf.Logger.Noticef("Step %d - Building %s from context '%s'", step_number+1, step.Name, b.Conf.Workdir)
+	b.Conf.Logger.Noticef("Step %d - Building %s from context '%s'", step_number+1, step.Name, b.getBuildContext(step))
 	// fix the Dockerfile
 	dockerfile, err := b.replaceFromField(step, step_number)
 	if err != nil {
@@ -257,8 +266,8 @@ func (b *Builder) BuildStep(step *Step, step_number int) error {
 		SuppressOutput:      b.Conf.SuppressOutput,
 		RmTmpContainer:      b.Conf.RmTmpContainers,
 		ForceRmTmpContainer: b.Conf.ForceRmTmpContainer,
-		OutputStream:        os.Stdout, // TODO: use a multi writer to get a stream out for the API
-		ContextDir:          b.Conf.Workdir,
+		OutputStream:        os.Stdout,               // TODO: use a multi writer to get a stream out for the API
+		ContextDir:          b.getBuildContext(step), // fsouza/go-dockerclient uses "ContextDir" for the Docker build context
 		BuildArgs:           buildArgs,
 		CPUShares:           int64(b.Conf.DockerCPUShares),
 	}
@@ -580,7 +589,7 @@ func (b *Builder) BuildStep(step *Step, step_number int) error {
 func (b *Builder) replaceFromField(step *Step, step_number int) (string, error) {
 	b.Conf.Logger.Noticef("Step %d - Parsing and converting '%s'", step_number+1, step.Dockerfile)
 
-	rwc, err := os.Open(path.Join(b.Conf.Workdir, step.Dockerfile))
+	rwc, err := os.Open(path.Join(b.getBuildContext(step), step.Dockerfile))
 	if err != nil {
 		return "", err
 	}
@@ -728,5 +737,5 @@ func (b *Builder) uniqueDockerfileName(step *Step) string {
 }
 
 func (b *Builder) uniqueDockerfile(step *Step) string {
-	return filepath.Join(b.Conf.Workdir, b.uniqueDockerfileName(step))
+	return filepath.Join(b.getBuildContext(step), b.uniqueDockerfileName(step))
 }

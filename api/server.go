@@ -10,9 +10,8 @@ import (
 )
 
 var (
-	VERSION         string = "dev"
+	VERSION string = "dev"
 )
-
 
 type Server struct {
 	Builder *build.Builder
@@ -33,7 +32,6 @@ func (s *Server) StartServer(version string) error {
 			},
 		})
 	}
-
 
 	router, err := rest.MakeRouter(
 		// system

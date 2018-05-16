@@ -3,9 +3,9 @@ package main_test
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"os"
 	"os/exec"
 	"testing"
-	"os"
 )
 
 var binPath string = "./habitus"
