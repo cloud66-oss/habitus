@@ -21,4 +21,3 @@ func (env_provider *EnvProvider) RegisterSecret(name string, value string) error
 	env_provider.registry[name] = value
 	return nil
 }
-

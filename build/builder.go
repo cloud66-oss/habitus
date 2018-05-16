@@ -222,10 +222,10 @@ func (b *Builder) uniqueStepName(step *Step) string {
 // The build context is defaulted to the habitus' workdir
 // unless the directive "context" is found for this step
 func (b *Builder) getBuildContext(step *Step) string {
-  if step.Context == "" {
-    return b.Conf.Workdir
-  }
-  return filepath.Join(b.Conf.Workdir, step.Context)
+	if step.Context == "" {
+		return b.Conf.Workdir
+	}
+	return filepath.Join(b.Conf.Workdir, step.Context)
 }
 
 // BuildStep builds a single step
@@ -266,7 +266,7 @@ func (b *Builder) BuildStep(step *Step, step_number int) error {
 		SuppressOutput:      b.Conf.SuppressOutput,
 		RmTmpContainer:      b.Conf.RmTmpContainers,
 		ForceRmTmpContainer: b.Conf.ForceRmTmpContainer,
-		OutputStream:        os.Stdout, // TODO: use a multi writer to get a stream out for the API
+		OutputStream:        os.Stdout,               // TODO: use a multi writer to get a stream out for the API
 		ContextDir:          b.getBuildContext(step), // fsouza/go-dockerclient uses "ContextDir" for the Docker build context
 		BuildArgs:           buildArgs,
 		CPUShares:           int64(b.Conf.DockerCPUShares),
@@ -584,15 +584,12 @@ func (b *Builder) BuildStep(step *Step, step_number int) error {
 	return nil
 }
 
-
-
-
 // this replaces the FROM field in the Dockerfile to one with the previous step's unique name
 // it stores the parsed result Dockefile in uniqueSessionName file
 func (b *Builder) replaceFromField(step *Step, step_number int) (string, error) {
 	b.Conf.Logger.Noticef("Step %d - Parsing and converting '%s'", step_number+1, step.Dockerfile)
 
-	rwc, err := os.Open(path.Join( b.getBuildContext(step), step.Dockerfile))
+	rwc, err := os.Open(path.Join(b.getBuildContext(step), step.Dockerfile))
 	if err != nil {
 		return "", err
 	}
