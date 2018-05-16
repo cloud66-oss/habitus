@@ -9,6 +9,9 @@ RUN go get -u github.com/kardianos/govendor
 RUN go get github.com/onsi/ginkgo/ginkgo
 RUN go get github.com/onsi/gomega
 
+# Installing Golang-Dep
+RUN curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+
 #copy the source files
 RUN mkdir -p /usr/local/go/src/github.com/cloud66/habitus
 COPY . /usr/local/go/src/github.com/cloud66/habitus
