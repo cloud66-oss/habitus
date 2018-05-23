@@ -1,7 +1,7 @@
 build:
   version: 2016-03-14
   steps:
-    - builder:
+    builder:
       name: builder
       dockerfile: Dockerfile.builder
       artifacts:
@@ -12,15 +12,15 @@ build:
       cleanup:
         commands:
           - rm -rf /root/.ssh/
-    - deployment:
+    deployment:
       name: ironmountain
       dockerfile: Dockerfile.deployment
       depends_on:
         - builder
-    - uploader:
+    uploader:
       name: uploader
       dockerfile: Dockerfile.uploader
       depends_on:
         - ironmountain
       command: s3cmd --access_key=_env(ACCESS_KEY) --secret_key=_env(SECRET_KEY) put /app/iron-mountain s3://uploads.aws.com
-  
+
