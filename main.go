@@ -145,8 +145,9 @@ func main() {
 
 	if config.SecretService {
 		// start the API
-		secret_service := &api.Server{Builder: b}
-		err = secret_service.StartServer(VERSION)
+		// TODO Wrap this into a docker-container in case of -containerize-server
+		server := &api.Server{Conf: &b.Conf.Server}
+		err = server.StartServer(VERSION)
 		if err != nil {
 			log.Fatalf("Cannot start API server due to %s", err.Error())
 			os.Exit(2)

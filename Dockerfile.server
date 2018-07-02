@@ -1,0 +1,12 @@
+FROM alpine:3.7
+MAINTAINER Daniël van Gils
+
+RUN apk add --update --no-cache ca-certificates
+
+COPY ./compiled/habitus_linux_amd64 /usr/local/bin/habitus
+
+RUN mkdir /var/habitus
+
+WORKDIR /var/habitus
+
+CMD [ "habitus", "server" ]

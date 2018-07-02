@@ -6,7 +6,8 @@ import (
 	"os"
 
 	"github.com/ant0ine/go-json-rest/rest"
-	"github.com/cloud66/habitus/build"
+	"github.com/cloud66/habitus/configuration"
+	"github.com/cloud66/habitus/secrets"
 )
 
 var (
@@ -14,18 +15,21 @@ var (
 )
 
 type Server struct {
-	Builder *build.Builder
+	Conf            *configuration.Server
+	secretProviders map[string]secrets.SecretProvider
 }
 
 func (s *Server) StartServer(version string) error {
 	VERSION = version
 	secret_api := rest.NewApi()
 
-	if s.Builder.Conf.UseAuthenticatedSecretServer {
+	s.secretProviders = secrets.GetProviders()
+
+	if s.Conf.UseAuthenticatedSecretServer {
 		secret_api.Use(&rest.AuthBasicMiddleware{
 			Realm: "Habitus secret service",
 			Authenticator: func(userId string, password string) bool {
-				if userId == s.Builder.Conf.AuthenticatedSecretServerUser && password == s.Builder.Conf.AuthenticatedSecretServerPassword {
+				if userId == s.Conf.AuthenticatedSecretServerUser && password == s.Conf.AuthenticatedSecretServerPassword {
 					return true
 				}
 				return false
@@ -49,11 +53,11 @@ func (s *Server) StartServer(version string) error {
 	secret_api.SetApp(router)
 
 	go func() {
-		s.Builder.Conf.Logger.Infof("Starting API on %d", s.Builder.Conf.ApiPort)
+		s.Conf.Logger.Infof("Starting API on %d", s.Conf.ApiPort)
 
 		// 192.168.99.1
-		if err := http.ListenAndServe(fmt.Sprintf("%s:%d", s.Builder.Conf.ApiBinding, s.Builder.Conf.ApiPort), secret_api.MakeHandler()); err != nil {
-			s.Builder.Conf.Logger.Errorf("Failed to start API %s", err.Error())
+		if err := http.ListenAndServe(fmt.Sprintf("%s:%d", s.Conf.ApiBinding, s.Conf.ApiPort), secret_api.MakeHandler()); err != nil {
+			s.Conf.Logger.Errorf("Failed to start API %s", err.Error())
 			os.Exit(2)
 		}
 
@@ -72,7 +76,7 @@ func (a *Server) version(w rest.ResponseWriter, r *rest.Request) {
 
 func (a *Server) serveSecret(w rest.ResponseWriter, r *rest.Request) {
 	// get the provider
-	provider := a.Builder.Build.SecretProviders[r.PathParam("type")]
+	provider := a.secretProviders[r.PathParam("type")]
 	result, err := provider.GetSecret(r.PathParam("name"))
 	if err != nil {
 		rest.Error(w, err.Error(), http.StatusBadRequest)
