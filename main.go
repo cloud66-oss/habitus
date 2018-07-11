@@ -8,9 +8,9 @@ import (
 
 	"runtime"
 
-	"github.com/cloud66/habitus/api"
-	"github.com/cloud66/habitus/build"
-	"github.com/cloud66/habitus/configuration"
+	"github.com/cloud66-oss/habitus/api"
+	"github.com/cloud66-oss/habitus/build"
+	"github.com/cloud66-oss/habitus/configuration"
 	"github.com/getsentry/raven-go"
 	"github.com/op/go-logging"
 )

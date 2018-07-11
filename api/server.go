@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/ant0ine/go-json-rest/rest"
-	"github.com/cloud66/habitus/build"
+	"github.com/cloud66-oss/habitus/build"
 )
 
 var (

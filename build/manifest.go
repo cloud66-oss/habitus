@@ -8,8 +8,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/cloud66/habitus/configuration"
-	"github.com/cloud66/habitus/secrets"
+	"github.com/cloud66-oss/habitus/configuration"
+	"github.com/cloud66-oss/habitus/secrets"
 
 	"gopkg.in/yaml.v2"
 )

@@ -5,10 +5,10 @@ build:
       name: builder
       dockerfile: Dockerfile.builder
       artifacts:
-        - /go/src/github.com/cloud66/iron-mountain/iron-mountain
-        - /go/src/github.com/cloud66/iron-mountain/config.json
-        - /go/src/github.com/cloud66/iron-mountain/localhost.crt
-        - /go/src/github.com/cloud66/iron-mountain/localhost.key
+        - /go/src/github.com/cloud66-oss/iron-mountain/iron-mountain
+        - /go/src/github.com/cloud66-oss/iron-mountain/config.json
+        - /go/src/github.com/cloud66-oss/iron-mountain/localhost.crt
+        - /go/src/github.com/cloud66-oss/iron-mountain/localhost.key
       cleanup:
         commands:
           - rm -rf /root/.ssh/

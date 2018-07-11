@@ -44,20 +44,20 @@ do_install() {
   if is_os "darwin"; then
     e_info "Downloading Habitus for macOS..."
     `rm -f /tmp/habitus &> /dev/null`
-    `curl -L --progress-bar -o /tmp/habitus https://github.com/cloud66/habitus/releases/download/$version/habitus_darwin_amd64`
+    `curl -L --progress-bar -o /tmp/habitus https://github.com/cloud66-oss/habitus/releases/download/$version/habitus_darwin_amd64`
   elif is_os "linux"; then
     if [[ is_64 ]]; then
 	  e_info "Downloading Habitus for Linux x64..."
 	  `rm -f /tmp/habitus &> /dev/null`
-	  `curl -L --progress-bar -o /tmp/habitus https://github.com/cloud66/habitus/releases/download/$version/habitus_linux_amd64`
+	  `curl -L --progress-bar -o /tmp/habitus https://github.com/cloud66-oss/habitus/releases/download/$version/habitus_linux_amd64`
     else
 	  e_info "Downloading Habitus for Linux x32..."
 	  `rm -f /tmp/habitus &> /dev/null`
-	  `curl -L --progress-bar -o /tmp/habitus https://github.com/cloud66/habitus/releases/download/$version/habitus_linux_386`
+	  `curl -L --progress-bar -o /tmp/habitus https://github.com/cloud66-oss/habitus/releases/download/$version/habitus_linux_386`
     fi
   else
   	e_error "Aborted: Unable to detect your operating system and architecture!"
-  	e_warning "Please download Habitus manually from: https://github.com/cloud66/habitus/releases"
+  	e_warning "Please download Habitus manually from: https://github.com/cloud66-oss/habitus/releases"
   	exit 1
   fi
   # extract the archive to local home

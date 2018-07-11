@@ -10,7 +10,7 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/cloud66/habitus/configuration"
+	"github.com/cloud66-oss/habitus/configuration"
 )
 
 var (

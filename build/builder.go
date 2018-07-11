@@ -19,8 +19,8 @@ import (
 
 	"os/exec"
 
-	"github.com/cloud66/habitus/configuration"
-	"github.com/cloud66/habitus/squash"
+	"github.com/cloud66-oss/habitus/configuration"
+	"github.com/cloud66-oss/habitus/squash"
 	"github.com/dchest/uniuri"
 	"github.com/dustin/go-humanize"
 	"github.com/fsouza/go-dockerclient"

@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cloud66/habitus/configuration"
+	"github.com/cloud66-oss/habitus/configuration"
 	"github.com/docker/go-units"
 )
 

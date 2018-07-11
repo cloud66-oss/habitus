@@ -4,7 +4,7 @@
 Habitus adds workflows to Docker build. This means you can create a chain of builds to generate your final Docker image based on a workflow. This is particularly useful if your code is in compiled languages like Java or Go or if you need to use secrets like SSH keys during the build.
 
 - Website: http://www.habitus.io/
-- [Download Habitus](https://github.com/cloud66/habitus/releases?utm_source=Githubdownload&utm_medium=GHDpage&utm_campaign=habitus)
+- [Download Habitus](https://github.com/cloud66-oss/habitus/releases?utm_source=Githubdownload&utm_medium=GHDpage&utm_campaign=habitus)
 - Slack Channel: [Join Our Slack Community](https://communityinviter.com/apps/cloud66ers/cloud-66-community).
 - Articles: http://blog.cloud66.com/tag/habitus/
 
@@ -61,7 +61,7 @@ Just run the install script on macOS or Linux!
 
 `curl -sSL https://raw.githubusercontent.com/cloud66/habitus/master/habitus_install.sh | bash`
 
-Or [download](https://github.com/cloud66/habitus/releases?utm_source=Githubdownload&utm_medium=GHDpage&utm_campaign=habitus) Habitus straight from this repo. Habitus can run on Linux, Windows and macOS. Copy the Habitus application into `/usr/local/bin/habitus` and check if it has the executable flags, if not run `chmod a+x /usr/local/bin/habitus`
+Or [download](https://github.com/cloud66-oss/habitus/releases?utm_source=Githubdownload&utm_medium=GHDpage&utm_campaign=habitus) Habitus straight from this repo. Habitus can run on Linux, Windows and macOS. Copy the Habitus application into `/usr/local/bin/habitus` and check if it has the executable flags, if not run `chmod a+x /usr/local/bin/habitus`
 
 Build files can be made up of multiple steps. Each step is independent of the other ones and downstream steps can use upstream ones as source (in `FROM` command). When habitus is installed, create a simple **build.yml** with just one build step and run Habitus. 
 
@@ -101,4 +101,4 @@ And you are ready to start your contribution to Habitus.
 
 ### CHANGELOG
 
-Check the changelog [here](https://github.com/cloud66/habitus/blob/master/CHANGELOG.md)
+Check the changelog [here](https://github.com/cloud66-oss/habitus/blob/master/CHANGELOG.md)
