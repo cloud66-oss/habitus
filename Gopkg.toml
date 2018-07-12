@@ -1,25 +1,4 @@
-
-# Gopkg.toml example
-#
-# Refer to https://github.com/golang/dep/blob/master/docs/Gopkg.toml.md
-# for detailed Gopkg.toml documentation.
-#
-# required = ["github.com/user/thing/cmd/thing"]
-# ignored = ["github.com/user/project/pkgX", "bitbucket.org/user/project/pkgA/pkgY"]
-#
-# [[constraint]]
-#   name = "github.com/user/project"
-#   version = "1.0.0"
-#
-# [[constraint]]
-#   name = "github.com/user/project2"
-#   branch = "dev"
-#   source = "github.com/myfork/project2"
-#
-# [[override]]
-#  name = "github.com/x/y"
-#  version = "2.4.0"
-
+required = ["github.com/sirupsen/logrus"]
 
 [[constraint]]
   name = "github.com/ant0ine/go-json-rest"
@@ -65,6 +44,16 @@
   name = "gopkg.in/yaml.v2"
   version = "2.2.1"
 
+# docker/docker at the time of this writing depends on logrus 1.0.3:
+# https://github.com/moby/moby/blob/705774aa7683892fc214d2b028d226f24ad20f1c/vendor.conf#L13
+#
+# As we don't use logrus directly from within habitus, and docker doesn't use dep, we need to explicitly mark it `required` and stick the version number like this:
+# See https://github.com/golang/dep/blob/master/docs/FAQ.md#how-do-i-constrain-a-transitive-dependency-s-version for more details
+#
+# One more gotcha is that running `dep ensure` or even `dep ensure -update` doesn't update Gopkg.lock to catch up the logrus version set in Gopkg.toml.
+# I suspect that it may be due to a bug in dep, but anyway, you need to manually update `Gopkg.lock` with the actual commit sha1 of 1.0.3 obtained from github:
+# https://github.com/sirupsen/logrus/commit/f006c2ac4710855cf0f916dd6b77acf6b048dc6e
+# After that, run `dep ensure -vendor-only` to update the vendored logrus.
 [[constraint]]
   name = "github.com/sirupsen/logrus"
-  version = "1.0.5"
+  version = "1.0.3"
