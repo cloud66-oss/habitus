@@ -10,6 +10,14 @@ go dependency in the `Dockerfile.tester` (transitive dependency).
 - Adding the keyword `context` for a step to allow specifying a custom
 context directory. Adapted the `examples/context` example.
 
+## V1.0.2
+
+- Support for custom networks #80
+- Support for Docker multi-stage builds #89
+- Support build arguments #74
+- Allow to execute commands with params
+- Use the native docker TLS settings
+
 ## V1.0.0
 
 - containers are coping artifacts with the required `stat` inside a container.  if you want to disable this, use the `--use-stat=false` command parameter.
