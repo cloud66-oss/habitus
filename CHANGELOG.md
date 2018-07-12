@@ -2,10 +2,13 @@
 
 ## Not Released
 
-- Adding the keyword `context` for a step to allow specifying a custom
-context directory. Adapted the `examples/context` example.
 - Fixing the test suite by adding the `github.com/sirupsen/logrus`
 go dependency in the `Dockerfile.tester` (transitive dependency).
+
+## V1.0.3
+
+- Adding the keyword `context` for a step to allow specifying a custom
+context directory. Adapted the `examples/context` example.
 
 ## V1.0.0
 
