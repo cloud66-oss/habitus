@@ -115,6 +115,7 @@ func main() {
 	// The -os flag allows free form text. Validate what was specified
 	if !config.ValidateOsType() {
 		fmt.Println("Invalid OS name")
+		fmt.Println("Please choose from ", configuration.OsTypes)
 		return
 	}
 
