@@ -430,10 +430,15 @@ func (b *Builder) BuildStep(step *Step, step_number int) error {
 			permMap := make(map[string]int)
 			if b.Conf.UseStatForPermissions {
 				for _, art := range step.Artifacts {
-					// Check for Busybox and modify the stat command
-					stat_cmd := []string{"stat", "--format='%a'", art.Source}
-					if b.Conf.UseBusybox {
-						stat_cmd = []string{"stat", "-c", "'%a'", art.Source}
+					// Define stat command for debian and override if told to use another OS
+					statCmd := []string{"stat", "--format='%a'", art.Source}
+					switch b.Conf.OsType {
+					case "redhat": 
+						statCmd = []string{"stat", "--format='%a'", art.Source}
+					case "busybox":
+						statCmd = []string{"stat", "-c", "'%a'", art.Source}
+					case "alpine":
+						statCmd = []string{"stat", "-c", "'%a'", art.Source}
 					}
 
 					execOpts := docker.CreateExecOptions{
@@ -442,7 +447,7 @@ func (b *Builder) BuildStep(step *Step, step_number int) error {
 						AttachStdout: true,
 						AttachStderr: true,
 						Tty:          false,
-						Cmd:          stat_cmd,
+						Cmd:          statCmd,
 					}
 					b.Conf.Logger.Debugf("Executing inside %s: %s", container.ID, execOpts.Cmd)
 					execObj, err := b.docker.CreateExec(execOpts)
@@ -704,11 +709,17 @@ func (b *Builder) copyToHost(a *Artifact, container string, perms map[string]int
 }
 
 func (b *Builder) createContainer(step *Step) (*docker.Container, error) {
-	// check to see if we should run under a Busybox environment
+	// Define shell for debian and override if another OS is specified
 	shell := []string{"/bin/bash"}
-	if b.Conf.UseBusybox {
+	switch b.Conf.OsType {
+	case "redhat":
+		shell = []string{"/bin/bash"}
+	case "busybox":
+		shell = []string{"/bin/sh"}
+	case "alpine":
 		shell = []string{"/bin/sh"}
 	}
+
 	config := docker.Config{
 		AttachStdout: true,
 		AttachStdin:  false,
