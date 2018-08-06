@@ -14,13 +14,14 @@ type TupleItem struct {
 
 type TupleArray []TupleItem
 
-type OsIdentifier int
-const (
-	debian      OsIdentifier = iota + 1
-	redhat
-	busybox
-	alpine
-)
+// Recognized OS type for --os switch.
+// Needs to agree with builder.go
+var OsTypes = []string{
+	"debian",
+	"redhat",
+	"busybox",
+	"alpine",
+}
 
 // Config stores application configurations
 type Config struct {
@@ -89,11 +90,9 @@ func CreateConfig() Config {
 	return Config{}
 }
 
-func ValidateOsType(text string) bool {
-	osTypes := []string{"debian", "redhat", "busybox", "alpine"}
-
-	for _, os := range(osTypes) {
-		if text == os {
+func (c *Config) ValidateOsType() bool {
+	for _, os := range OsTypes {
+		if c.OsType == os {
 			return true
 		}
 	}
