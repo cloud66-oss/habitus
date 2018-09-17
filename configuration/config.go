@@ -14,6 +14,15 @@ type TupleItem struct {
 
 type TupleArray []TupleItem
 
+// Recognized OS type for --os switch.
+// Needs to agree with builder.go
+var OsTypes = []string{
+	"debian",
+	"redhat",
+	"busybox",
+	"alpine",
+}
+
 // Config stores application configurations
 type Config struct {
 	Buildfile                         string
@@ -36,6 +45,7 @@ type Config struct {
 	UseTLS                            bool
 	UseStatForPermissions             bool
 	FroceRmImages                     bool
+	OsType                            string
 	ApiPort                           int
 	ApiBinding                        string
 	SecretService                     bool
@@ -78,4 +88,13 @@ func (i *TupleArray) Find(key string) string {
 // CreateConfig creates a new configuration object
 func CreateConfig() Config {
 	return Config{}
+}
+
+func (c *Config) ValidateOsType() bool {
+	for _, os := range OsTypes {
+		if c.OsType == os {
+			return true
+		}
+	}
+	return false
 }

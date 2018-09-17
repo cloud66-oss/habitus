@@ -5,7 +5,7 @@ build:
     tester:
       name: tester
       dockerfile: Dockerfile.tester
-      command: go test
+      command: go test . ./configuration
     crosscompile:
       name: crosscompile
       depends_on:

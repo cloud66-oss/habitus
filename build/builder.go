@@ -439,14 +439,26 @@ func (b *Builder) BuildStep(step *Step, step_number int) error {
 			permMap := make(map[string]int)
 			if b.Conf.UseStatForPermissions {
 				for _, art := range step.Artifacts {
+					// Define stat command for debian and override if told to use another OS
+					statCmd := []string{"stat", "--format='%a'", art.Source}
+					switch b.Conf.OsType {
+					case "redhat": 
+						statCmd = []string{"stat", "--format='%a'", art.Source}
+					case "busybox":
+						statCmd = []string{"stat", "-c", "'%a'", art.Source}
+					case "alpine":
+						statCmd = []string{"stat", "-c", "'%a'", art.Source}
+					}
+
 					execOpts := docker.CreateExecOptions{
 						Container:    container.ID,
 						AttachStdin:  false,
 						AttachStdout: true,
 						AttachStderr: true,
 						Tty:          false,
-						Cmd:          []string{"stat", "--format='%a'", art.Source},
+						Cmd:          statCmd,
 					}
+					b.Conf.Logger.Debugf("Executing inside %s: %s", container.ID, execOpts.Cmd)
 					execObj, err := b.docker.CreateExec(execOpts)
 					if err != nil {
 						return err
@@ -512,6 +524,7 @@ func (b *Builder) BuildStep(step *Step, step_number int) error {
 				Tty:          true,
 				Cmd:          strings.Split(step.Command, " "),
 			}
+			b.Conf.Logger.Debugf("Executing inside %s: %s", container.ID, execOpts.Cmd)
 			execObj, err := b.docker.CreateExec(execOpts)
 			if err != nil {
 				return err
@@ -705,12 +718,23 @@ func (b *Builder) copyToHost(a *Artifact, container string, perms map[string]int
 }
 
 func (b *Builder) createContainer(step *Step) (*docker.Container, error) {
+	// Define shell for debian and override if another OS is specified
+	shell := []string{"/bin/bash"}
+	switch b.Conf.OsType {
+	case "redhat":
+		shell = []string{"/bin/bash"}
+	case "busybox":
+		shell = []string{"/bin/sh"}
+	case "alpine":
+		shell = []string{"/bin/sh"}
+	}
+
 	config := docker.Config{
 		AttachStdout: true,
 		AttachStdin:  false,
 		AttachStderr: true,
 		Image:        b.uniqueStepName(step),
-		Cmd:          []string{"/bin/bash"},
+		Cmd:          shell,
 		Tty:          true,
 	}
 

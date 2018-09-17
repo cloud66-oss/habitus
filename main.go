@@ -74,6 +74,7 @@ func main() {
 	flag.BoolVar(&config.NoSquash, "no-cleanup", false, "Skip cleanup commands for this run. Used for debugging")
 	flag.BoolVar(&config.FroceRmImages, "force-rmi", false, "Force remove of unwanted images")
 	flag.BoolVar(&config.NoPruneRmImages, "noprune-rmi", false, "No pruning of unwanted images")
+	flag.StringVar(&config.OsType, "os", "debian", "Specify the OS that the build occurs in")
 	flag.BoolVar(&flagShowHelp, "help", false, "Display the help")
 	flag.BoolVar(&flagShowVersion, "version", false, "Display version information")
 	flag.IntVar(&config.ApiPort, "port", 8080, "Port to server the API")
@@ -108,6 +109,13 @@ func main() {
 		} else {
 			fmt.Printf("Habitus - v%s (%s) (c) 2017 Cloud 66 Inc.\n", VERSION, BUILD_DATE)
 		}
+		return
+	}
+
+	// The -os flag allows free form text. Validate what was specified
+	if !config.ValidateOsType() {
+		fmt.Println("Invalid OS name")
+		fmt.Println("Please choose from ", configuration.OsTypes)
 		return
 	}
 
