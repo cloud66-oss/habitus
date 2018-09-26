@@ -5,6 +5,10 @@
 - Fixing the test suite by adding the `github.com/sirupsen/logrus`
 go dependency in the `Dockerfile.tester` (transitive dependency).
 
+## V1.0.4
+
+- Added support for --os parameter to choose the shell command based on the OS #101
+
 ## V1.0.3
 
 - Adding the keyword `context` for a step to allow specifying a custom
