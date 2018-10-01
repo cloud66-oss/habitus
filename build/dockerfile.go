@@ -11,6 +11,7 @@ import (
 func readDockerfileToTarget(dockerfile string, target string) (string, error) {
 	targetPattern := regexp.MustCompile(fmt.Sprintf(`\s+[aA][sS]\s+%s\s*$`, target))
 	nextPattern := regexp.MustCompile(`\s+[aA][sS]\s+.+\s*$`)
+	commentOrDirectivePattern := regexp.MustCompile(`^#.*$`)
 
 	scanner := bufio.NewScanner(strings.NewReader(dockerfile))
 	buf := bytes.NewBuffer(make([]byte, 0, len(dockerfile)))
@@ -18,11 +19,14 @@ func readDockerfileToTarget(dockerfile string, target string) (string, error) {
 	targetFound := false
 	for scanner.Scan() {
 		line := scanner.Text()
-		// Read dockerfile until the end of the target stage
-		if targetFound && nextPattern.MatchString(line) {
-			break
-		} else if targetPattern.MatchString(line) {
-			targetFound = true
+		// Copy comments / directives as is
+		if !commentOrDirectivePattern.MatchString(line) {
+			// Read dockerfile until the end of the target stage
+			if targetFound && nextPattern.MatchString(line) {
+				break
+			} else if targetPattern.MatchString(line) {
+				targetFound = true
+			}
 		}
 		buf.WriteString(line)
 		buf.WriteString("\n")
