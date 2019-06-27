@@ -1,3 +1,5 @@
+<img src="http://cdn2-cloud66-com.s3.amazonaws.com/images/oss-sponsorship.png" width=150/>
+
 [ ![Codeship Status for cloud66-opensource/habitus](https://app.codeship.com/projects/99dfe470-675f-0136-e4f1-7aa228e0ad41/status?branch=master)](https://app.codeship.com/projects/297629)
 
 # Habitus
