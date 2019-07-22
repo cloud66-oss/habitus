@@ -5,7 +5,7 @@
 # Habitus
 Habitus adds workflows to Docker build. This means you can create a chain of builds to generate your final Docker image based on a workflow. This is particularly useful if your code is in compiled languages like Java or Go or if you need to use secrets like SSH keys during the build.
 
-- Website: http://www.habitus.io/
+- Help Pages: https://help.cloud66.com/habitus/
 - [Download Habitus](https://github.com/cloud66-oss/habitus/releases?utm_source=Githubdownload&utm_medium=GHDpage&utm_campaign=habitus)
 - Slack Channel: [Join Our Slack Community](https://communityinviter.com/apps/cloud66ers/cloud-66-community).
 - Articles: http://blog.cloud66.com/tag/habitus/
@@ -52,7 +52,7 @@ ________________________________________________________________________________
 
 Comprehensive documentation is available on the Habitus website:
 
-http://www.habitus.io/
+https://help.cloud66.com/habitus/
 
 
 
@@ -78,7 +78,7 @@ Run habitus
 
     # habitus
 
-And you’re ready to start using Habitus.  Comprehensive documentation about build.yml is available on the Habitus website: http://www.habitus.io/
+And you’re ready to start using Habitus.  Comprehensive documentation about build.yml is available on the Habitus website: https://help.cloud66.com/habitus/
 
 ### Developing Habitus:
 ________________________________________________________________________________________________________
