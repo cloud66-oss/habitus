@@ -442,7 +442,7 @@ func (b *Builder) BuildStep(step *Step, step_number int) error {
 					// Define stat command for debian and override if told to use another OS
 					statCmd := []string{"stat", "--format='%a'", art.Source}
 					switch b.Conf.OsType {
-					case "redhat": 
+					case "redhat":
 						statCmd = []string{"stat", "--format='%a'", art.Source}
 					case "busybox":
 						statCmd = []string{"stat", "-c", "'%a'", art.Source}
@@ -700,7 +700,7 @@ func (b *Builder) copyToHost(a *Artifact, container string, perms map[string]int
 			}
 
 		default:
-			return errors.New("Invalid header type")
+			return fmt.Errorf("Invalid file type (%c) inside artifact tarball. Currently, only directories and regular files are supported", hdr.Typeflag)
 		}
 
 		if b.Conf.UseStatForPermissions {
