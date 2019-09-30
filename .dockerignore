@@ -1,3 +1,4 @@
+compiled/*
 Dockerfile
 Dockerfile.crosscompile
 Dockerfile.tester
