@@ -700,7 +700,7 @@ func (b *Builder) copyToHost(a *Artifact, container string, perms map[string]int
 			}
 
 		default:
-			return fmt.Errorf("Invalid file type (%c) inside artifact tarball. Currently, only directories and regular files are supported", hdr.Typeflag)
+			return fmt.Errorf("Invalid file type (%c) for destination %s inside artifact tarball. Currently, only directories and regular files are supported", hdr.Typeflag, destFile)
 		}
 
 		if b.Conf.UseStatForPermissions {
