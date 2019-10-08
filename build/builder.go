@@ -581,11 +581,13 @@ func (b *Builder) BuildStep(step *Step, step_number int) error {
 
 	if step.AfterBuildCommand != "" && b.Conf.AllowAfterBuildCommands {
 		b.Conf.Logger.Noticef("Step %d - Running command [%s] on host", step_number+1, step.AfterBuildCommand)
-		stdoutStderr, err := exec.Command("sh", "-c", step.AfterBuildCommand).CombinedOutput()
+		cmd := exec.Command("sh", "-c", step.AfterBuildCommand)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
 		if err != nil {
 			return err
 		}
-		fmt.Printf("%s\n", stdoutStderr)
 	}
 
 	// clean up the parsed docker file. It will remain there if there was a problem
