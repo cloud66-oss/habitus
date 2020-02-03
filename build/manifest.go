@@ -128,7 +128,7 @@ func LoadBuildFromFile(config *configuration.Config) (*Manifest, error) {
 	// check the version. for now we are going to support only one version
 	// in future, version will select the parser
 	if (n.BuildConfig.Version != "2016-02-13") && (n.BuildConfig.Version != "2016-03-14") {
-		return nil, errors.New("Invalid build schema version")
+		return nil, errors.New("Invalid build schema version. \n The property build.version allows only the following two valid values: 2016-02-13 or 2016-03-14.")
 	}
 
 	return n.convertToBuild(n.BuildConfig.Version)
